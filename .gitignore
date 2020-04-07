@@ -1,0 +1,14 @@
+# virtual env
+/venv/*
+
+# buildozer build dir
+/.buildozer/*
+
+# buildozer output dir
+/bin/*
+
+# python temps
+*.pyc
+
+# editor temps
+*.swp
