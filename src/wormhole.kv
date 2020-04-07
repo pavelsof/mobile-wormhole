@@ -2,133 +2,132 @@
 #:import basename os.path.basename
 
 <Button>:
-	font_size: 30
-	height: 100
-	size_hint: None, None
-	width: 300
+    font_size: 30
+    height: 100
+    size_hint: None, None
+    width: 300
 
 
 <ErrorPopup>:
-	size_hint: 0.8, 0.5
-	title: 'Error'
+    size_hint: 0.8, 0.5
+    title: 'Error'
 
-	BoxLayout:
-		orientation: 'vertical'
+    BoxLayout:
+        orientation: 'vertical'
 
-		Label:
-			text: root.error
+        Label:
+            text: root.error
 
-		AnchorLayout:
-			Button:
-				text: 'ok'
-				on_release: root.dismiss()
+        AnchorLayout:
+            Button:
+                text: 'ok'
+                on_release: root.dismiss()
 
 
 <HomeScreen>:
-	name: 'home_screen'
+    name: 'home_screen'
 
-	BoxLayout:
-		orientation: 'vertical'
+    BoxLayout:
+        orientation: 'vertical'
 
-		AnchorLayout:
-			Button:
-				text: 'send'
-				on_release: root.manager.current = 'send_screen'
+        AnchorLayout:
+            Button:
+                text: 'send'
+                on_release: root.manager.current = 'send_screen'
 
-		AnchorLayout:
-			Button:
-				text: 'receive'
-				on_release: root.manager.current = 'receive_screen'
+        AnchorLayout:
+            Button:
+                text: 'receive'
+                on_release: root.manager.current = 'receive_screen'
 
 
 <SendScreen>:
-	name: 'send_screen'
+    name: 'send_screen'
 
-	BoxLayout:
-		orientation: 'vertical'
+    BoxLayout:
+        orientation: 'vertical'
 
-		BoxLayout:
-			orientation: 'vertical'
+        BoxLayout:
+            orientation: 'vertical'
 
-			Label:
-				text: 'your code is'
+            Label:
+                text: 'your code is'
 
-			Label:
-				text: root.code
+            Label:
+                text: root.code
 
-		BoxLayout:
-			orientation: 'vertical'
+        BoxLayout:
+            orientation: 'vertical'
 
-			AnchorLayout:
-				Button:
-					text: 'choose file'
-					on_release: root.open_file_chooser()
+            AnchorLayout:
+                Button:
+                    text: 'choose file'
+                    on_release: root.open_file_chooser()
 
-			AnchorLayout:
-				Label:
-					text: basename(root.chosen_path) if root.chosen_path else ''
+            AnchorLayout:
+                Label:
+                    text: basename(root.path) if root.path else ''
 
-		BoxLayout:
-			orientation: 'horizontal'
+        BoxLayout:
+            orientation: 'horizontal'
 
-			AnchorLayout:
-				Button:
-					text: 'cancel'
-					on_release: root.manager.current = 'home_screen'
+            AnchorLayout:
+                Button:
+                    text: 'cancel'
+                    on_release: root.manager.current = 'home_screen'
 
-			AnchorLayout:
-				Button:
-					disabled: root.send_button_disabled
-					text: root.send_button_text
-					on_release: root.send()
+            AnchorLayout:
+                Button:
+                    disabled: root.send_button_disabled
+                    text: root.send_button_text
+                    on_release: root.send()
 
 
 <ReceiveScreen>:
-	name: 'receive_screen'
+    name: 'receive_screen'
 
-	BoxLayout:
-		orientation: 'vertical'
+    BoxLayout:
+        orientation: 'vertical'
 
-		BoxLayout:
-			orientation: 'vertical'
-			size_hint: 1, 0.2
+        BoxLayout:
+            orientation: 'vertical'
 
-			Label:
-				text: 'enter the code'
+            AnchorLayout:
+                TextInput:
+                    focus: True
+                    font_size: 30
+                    height: 100
+                    id: code_input
+                    multiline: False
+                    size_hint: None, None
+                    width: 500
 
-			TextInput:
-				font_size: 30
-				height: 100
-				id: code_input
-				multiline: False
-				size_hint: 1, None
-				text: ''
+            AnchorLayout:
+                Button:
+                    disabled: root.connect_button_disabled
+                    text: root.connect_button_text
+                    on_release: root.open_wormhole()
 
-		BoxLayout:
-			orientation: 'vertical'
+        BoxLayout:
+            orientation: 'vertical'
 
-			Label:
-				text: 'choose where to store the file'
+            AnchorLayout:
+                Button:
+                    text: 'choose location'
+                    on_release: root.open_location_chooser()
 
-			FileChooserIconView:
-				id: file_chooser
-				on_selection: file_input.text = self.selection and self.selection[0] or ''
+            AnchorLayout:
+                Label:
+                    text: basename(root.path) if root.path else ''
 
-			TextInput:
-				id: file_input
-				height: 30
-				multiline: False
-				size_hint: 1, None
+        BoxLayout:
+            orientation: 'horizontal'
 
-		BoxLayout:
-			orientation: 'horizontal'
-			size_hint: 1, 0.2
+            AnchorLayout:
+                Button:
+                    text: 'cancel'
+                    on_release: root.manager.current = 'home_screen'
 
-			AnchorLayout:
-				Button:
-					text: 'cancel'
-					on_release: root.manager.current = 'home_screen'
-
-			AnchorLayout:
-				Button:
-					text: 'receive'
+            AnchorLayout:
+                Button:
+                    text: 'receive'

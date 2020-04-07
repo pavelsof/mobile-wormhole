@@ -30,6 +30,18 @@ class Wormhole:
         deferred = self.wormhole.get_code()
         return deferred
 
+    def connect(self, code):
+        """
+        Connect to another wormhole client by its code generated. This has to
+        be exchanged between the two users before the wormhole connects.
+
+        Return a Deferred that resolves upon successful connection or rejects
+        with Timeout.
+        """
+        self.wormhole.set_code(code)
+        deferred = self.wormhole.get_code()
+        return deferred
+
     def exchange_keys(self):
         """
         Return a Deferred that resolves when the key exchange between the two

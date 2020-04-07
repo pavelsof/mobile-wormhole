@@ -23,7 +23,7 @@ class HomeScreen(Screen):
 
 class SendScreen(Screen):
     code = StringProperty('')
-    chosen_path = StringProperty('')
+    path = StringProperty('')
     send_button_text = StringProperty('send')
     send_button_disabled = BooleanProperty(False)
 
@@ -38,7 +38,7 @@ class SendScreen(Screen):
         Called when the user enters this screen.
         """
         self.code = ''
-        self.chosen_path = ''
+        self.path = ''
         self.send_button_disabled = True
         self.send_button_text = 'waiting for code'
 
@@ -56,20 +56,20 @@ class SendScreen(Screen):
         """
         Called when the user releases the choose file button.
         """
-        def update_chosen_path(selection):
+        def update_path(selection):
             if selection:
                 try:
                     path = os.path.normpath(selection[0])
                     assert os.path.exists(path) and os.path.isfile(path)
-                except (AssertionError, IndexError):
+                except:
                     self.show_error(
                         'there is something wrong about the file you chose'
                     )
-                    self.chosen_path = ''
+                    self.path = ''
                 else:
-                    self.chosen_path = path
+                    self.path = path
             else:
-                self.chosen_path = ''
+                self.path = ''
 
         try:
             from android.permissions import (
@@ -82,18 +82,18 @@ class SendScreen(Screen):
 
         filechooser.open_file(
             title='choose a file to send',
-            on_selection=update_chosen_path
+            on_selection=update_path
         )
 
     def send(self):
         """
         Called when the user releases the send button.
         """
-        if not self.chosen_path:
+        if not self.path:
             self.show_error('please choose a file')
             return
         else:
-            file_path = self.chosen_path
+            file_path = self.path
 
         def exchange_keys():
             self.send_button_disabled = True
@@ -117,13 +117,89 @@ class SendScreen(Screen):
         """
         Called when the user leaves this screen.
         """
-        self.wormhole.close()
         self.code = ''
-        self.chosen_path = ''
+        self.path = ''
+        self.wormhole.close()
 
 
 class ReceiveScreen(Screen):
-    pass
+    path = StringProperty('')
+    connect_button_text = StringProperty('connect')
+    connect_button_disabled = BooleanProperty(False)
+
+    def show_error(self, error):
+        """
+        Show a hopefully user-friendly error message.
+        """
+        Factory.ErrorPopup(error=str(error)).open()
+
+    def open_wormhole(self):
+        """
+        Called when the user releases the connect button.
+        """
+        code = self.ids.code_input.text.strip()
+        if not code:
+            return self.show_error('please enter a code')
+
+        def connect():
+            self.connect_button_disabled = True
+            self.connect_button_text = 'connecting'
+
+            if hasattr(self, 'wormhole'):
+                self.wormhole.close()
+
+            self.wormhole = Wormhole()
+
+            deferred = self.wormhole.connect(code)
+            deferred.addCallbacks(exchange_keys, self.show_error)
+
+        def exchange_keys(*args):
+            self.connect_button_disabled = True
+            self.connect_button_text = 'exchanging keys'
+            deferred = self.wormhole.exchange_keys()
+            deferred.addCallbacks(show_connected, self.show_error)
+
+        def show_connected(*args):
+            self.connect_button_disabled = True
+            self.connect_button_text = 'connected'
+
+        connect()
+
+    def open_location_chooser(self):
+        """
+        Called when the user releases the choose download location button.
+
+        The filechooser already asks for confirmation if the user chooses to
+        overwrite an already existing path.
+        """
+        def update_path(selection):
+            if selection:
+                try:
+                    path = os.path.normpath(selection[0])
+                except:
+                    self.show_error(
+                        'there is something wrong with the location you chose'
+                    )
+                    self.path = ''
+                else:
+                    self.path = path
+            else:
+                self.path = ''
+
+        filechooser.save_file(
+            title='choose where to download the file',
+            on_selection=update_path
+        )
+
+    def on_leave(self):
+        """
+        Called when the user leaves this screen.
+        """
+        self.code = ''
+        self.path = ''
+        self.connect_button_text = 'connect'
+        self.connect_button_disabled = False
+        self.wormhole.close()
 
 
 class WormholeApp(App):
