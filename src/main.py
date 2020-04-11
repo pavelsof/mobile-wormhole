@@ -1,6 +1,7 @@
 import os.path
 
 from kivy.app import App
+from kivy.core.window import Window
 from kivy.factory import Factory
 from kivy.properties import BooleanProperty, StringProperty
 from kivy.support import install_twisted_reactor
@@ -11,10 +12,18 @@ from plyer import filechooser
 install_twisted_reactor()
 
 from magic import Wormhole
+from cross import ensure_storage_perms, get_downloads_dir
 
 
 class ErrorPopup(Popup):
     error = StringProperty('Something bad happened!')
+
+    @staticmethod
+    def show(error):
+        """
+        Show a hopefully user-friendly error message.
+        """
+        Factory.ErrorPopup(error=str(error)).open()
 
 
 class HomeScreen(Screen):
@@ -26,12 +35,6 @@ class SendScreen(Screen):
     path = StringProperty('')
     send_button_text = StringProperty('send')
     send_button_disabled = BooleanProperty(False)
-
-    def show_error(self, error):
-        """
-        Show a hopefully user-friendly error message.
-        """
-        Factory.ErrorPopup(error=str(error)).open()
 
     def on_enter(self):
         """
@@ -50,7 +53,7 @@ class SendScreen(Screen):
             self.send_button_text = 'send'
 
         deferred = self.wormhole.generate_code()
-        deferred.addCallbacks(update_code, self.show_error)
+        deferred.addCallbacks(update_code, ErrorPopup.show)
 
     def open_file_chooser(self):
         """
@@ -62,7 +65,7 @@ class SendScreen(Screen):
                     path = os.path.normpath(selection[0])
                     assert os.path.exists(path) and os.path.isfile(path)
                 except:
-                    self.show_error(
+                    ErrorPopup.show(
                         'there is something wrong about the file you chose'
                     )
                     self.path = ''
@@ -71,27 +74,26 @@ class SendScreen(Screen):
             else:
                 self.path = ''
 
-        try:
-            from android.permissions import (
-                Permission, check_permission, request_permissions
+        def show_error():
+            ErrorPopup.show(
+                'you cannot send a file if the app cannot access it'
             )
-            if not check_permission(Permission.WRITE_EXTERNAL_STORAGE):
-                request_permissions([Permission.WRITE_EXTERNAL_STORAGE])
-        except ImportError:
-            pass
 
-        filechooser.open_file(
-            title='choose a file to send',
-            on_selection=update_path
-        )
+        @ensure_storage_perms(show_error)
+        def open_file_chooser():
+            filechooser.open_file(
+                title='choose a file to send',
+                on_selection=update_path
+            )
+
+        open_file_chooser()
 
     def send(self):
         """
         Called when the user releases the send button.
         """
         if not self.path:
-            self.show_error('please choose a file')
-            return
+            return ErrorPopup.show('please choose a file')
         else:
             file_path = self.path
 
@@ -99,13 +101,13 @@ class SendScreen(Screen):
             self.send_button_disabled = True
             self.send_button_text = 'exchanging keys'
             deferred = self.wormhole.exchange_keys()
-            deferred.addCallbacks(send_file, self.show_error)
+            deferred.addCallbacks(send_file, ErrorPopup.show)
 
         def send_file(*args):
             self.send_button_disabled = True
             self.send_button_text = 'sending file'
             deferred = self.wormhole.send_file(file_path)
-            deferred.addCallbacks(show_done, self.show_error)
+            deferred.addCallbacks(show_done, ErrorPopup.show)
 
         def show_done(*args):
             self.send_button_disabled = True
@@ -127,37 +129,33 @@ class ReceiveScreen(Screen):
     connect_button_text = StringProperty('connect')
     connect_button_disabled = BooleanProperty(False)
 
-    def show_error(self, error):
-        """
-        Show a hopefully user-friendly error message.
-        """
-        Factory.ErrorPopup(error=str(error)).open()
-
     def open_wormhole(self):
         """
         Called when the user releases the connect button.
         """
         code = self.ids.code_input.text.strip()
         if not code:
-            return self.show_error('please enter a code')
+            return ErrorPopup.show('please enter a code')
 
         def connect():
             self.connect_button_disabled = True
             self.connect_button_text = 'connecting'
 
-            if hasattr(self, 'wormhole'):
+            try:
                 self.wormhole.close()
+            except AttributeError:
+                pass
 
             self.wormhole = Wormhole()
 
             deferred = self.wormhole.connect(code)
-            deferred.addCallbacks(exchange_keys, self.show_error)
+            deferred.addCallbacks(exchange_keys, ErrorPopup.show)
 
         def exchange_keys(*args):
             self.connect_button_disabled = True
             self.connect_button_text = 'exchanging keys'
             deferred = self.wormhole.exchange_keys()
-            deferred.addCallbacks(show_connected, self.show_error)
+            deferred.addCallbacks(show_connected, ErrorPopup.show)
 
         def show_connected(*args):
             self.connect_button_disabled = True
@@ -177,7 +175,7 @@ class ReceiveScreen(Screen):
                 try:
                     path = os.path.normpath(selection[0])
                 except:
-                    self.show_error(
+                    ErrorPopup.show(
                         'there is something wrong with the location you chose'
                     )
                     self.path = ''
@@ -195,11 +193,15 @@ class ReceiveScreen(Screen):
         """
         Called when the user leaves this screen.
         """
+        try:
+            self.wormhole.close()
+        except AttributeError:
+            pass
+
         self.code = ''
         self.path = ''
         self.connect_button_text = 'connect'
         self.connect_button_disabled = False
-        self.wormhole.close()
 
 
 class WormholeApp(App):
@@ -207,13 +209,32 @@ class WormholeApp(App):
     def build(self):
         """
         Init and return the main widget, in our case the screen manager.
+
+        Attach the on_keyboard event listener to the Window object.
         """
         self.screen_manager = ScreenManager(transition=NoTransition())
 
         for screen_cls in [HomeScreen, SendScreen, ReceiveScreen]:
             self.screen_manager.add_widget(screen_cls())
 
+        Window.bind(on_keyboard=self.on_keyboard)
+
         return self.screen_manager
+
+    def on_keyboard(self, window, key, *args):
+        """
+        Called when the keyboard is used for input.
+
+        Handle the back button on Android (this equates to the escape key). If
+        the user is not on the home screen, navigate them there; otherwise let
+        them exit the app (the default behaviour).
+        """
+        if key == 27:
+            if self.screen_manager.current != 'home_screen':
+                self.screen_manager.current = 'home_screen'
+                return True
+
+        return False
 
 
 if __name__ == '__main__':
