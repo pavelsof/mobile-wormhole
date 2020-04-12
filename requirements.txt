@@ -5,7 +5,7 @@
 #    pip-compile
 #
 appdirs==1.4.3            # via virtualenv
-attrs==19.3.0             # via autobahn, automat, magic-wormhole, service-identity, twisted
+attrs==19.3.0             # via autobahn, automat, magic-wormhole, pytest, service-identity, twisted
 autobahn[twisted]==20.4.1  # via magic-wormhole
 automat==20.2.0           # via magic-wormhole, twisted, txtorcon
 backcall==0.1.0           # via ipython
@@ -17,15 +17,16 @@ click==7.1.1              # via magic-wormhole, pip-tools
 constantly==15.1.0        # via twisted
 cryptography==2.9         # via autobahn, pyopenssl, service-identity, txtorcon
 cython==0.29.16           # via -r requirements.in
-decorator==4.4.2          # via ipython, traitlets
+decorator==4.4.2          # via ipython, pytest-twisted, traitlets
 distlib==0.3.0            # via virtualenv
 docutils==0.16            # via kivy
 filelock==3.0.12          # via virtualenv
+greenlet==0.4.15          # via pytest-twisted
 hkdf==0.0.3               # via magic-wormhole, spake2
 humanize==2.2.0           # via magic-wormhole
 hyperlink==19.0.0         # via twisted
 idna==2.9                 # via hyperlink, requests, twisted
-importlib-metadata==1.6.0  # via virtualenv
+importlib-metadata==1.6.0  # via pluggy, pytest, virtualenv
 incremental==17.5.0       # via twisted, txtorcon
 ipython-genutils==0.2.0   # via traitlets
 ipython==7.13.0           # via -r requirements.in
@@ -33,14 +34,18 @@ jedi==0.16.0              # via ipython
 kivy-garden==0.1.4        # via kivy
 kivy==1.11.1              # via -r requirements.in
 magic-wormhole==0.11.2    # via -r requirements.in
+more-itertools==8.2.0     # via pytest
+packaging==20.3           # via pytest
 parso==0.6.2              # via jedi
 pexpect==4.8.0            # via buildozer, ipython
 pickleshare==0.7.5        # via ipython
 pip-tools==4.5.1          # via -r requirements.in
 pipdeptree==0.13.2        # via -r requirements.in
+pluggy==0.13.1            # via pytest
 plyer==1.4.3              # via -r requirements.in
 prompt-toolkit==3.0.5     # via ipython
 ptyprocess==0.6.0         # via pexpect
+py==1.8.1                 # via pytest
 pyasn1-modules==0.2.8     # via service-identity
 pyasn1==0.4.8             # via pyasn1-modules, service-identity
 pycparser==2.20           # via cffi
@@ -49,10 +54,13 @@ pygments==2.6.1           # via ipython, kivy
 pyhamcrest==2.0.2         # via twisted
 pynacl==1.3.0             # via magic-wormhole
 pyopenssl==19.1.0         # via twisted
+pyparsing==2.4.7          # via packaging
+pytest-twisted==1.12      # via -r requirements.in
+pytest==5.4.1             # via -r requirements.in, pytest-twisted
 requests==2.23.0          # via kivy-garden
 service-identity==18.1.0  # via twisted
 sh==1.12.14               # via buildozer
-six==1.14.0               # via automat, cryptography, magic-wormhole, pip-tools, pynacl, pyopenssl, traitlets, virtualenv
+six==1.14.0               # via automat, cryptography, magic-wormhole, packaging, pip-tools, pynacl, pyopenssl, traitlets, virtualenv
 spake2==0.8               # via magic-wormhole
 tqdm==4.45.0              # via magic-wormhole
 traitlets==4.3.3          # via ipython
@@ -61,7 +69,7 @@ txaio==20.4.1             # via autobahn
 txtorcon==20.0.0          # via magic-wormhole
 urllib3==1.25.8           # via requests
 virtualenv==20.0.16       # via buildozer
-wcwidth==0.1.9            # via prompt-toolkit
+wcwidth==0.1.9            # via prompt-toolkit, pytest
 zipp==3.1.0               # via importlib-metadata
 zope.interface==5.0.2     # via autobahn, twisted, txtorcon
 

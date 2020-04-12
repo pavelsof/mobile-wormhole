@@ -2,47 +2,95 @@ import json
 import os
 
 from twisted.internet import reactor
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import inlineCallbacks, returnValue, TimeoutError
 from twisted.protocols.basic import FileSender
 from wormhole import create
 from wormhole.cli.cmd_send import APPID
 from wormhole.cli.public_relay import RENDEZVOUS_RELAY, TRANSIT_RELAY
+from wormhole.errors import WrongPasswordError
 from wormhole.transit import TransitSender
+
+
+class HumanError(Exception):
+    """
+    Raised when one of the humans at either end of the wormhole does something
+    that breaks it, e.g. enters the wrong code.
+    """
+    pass
+
+
+class SuspiciousOperation(Exception):
+    """
+    Raised when things do not go according to the protocol, e.g. a message that
+    cannot be parsed is received.
+    """
+    pass
+
+
+class Timeout(Exception):
+    """
+    Raised when the rendezvous server or the other end of the wormhole take
+    longer than expected to respond.
+    """
+    pass
 
 
 class Wormhole:
 
-    def __init__(self):
+    def __init__(
+            self, app_id=APPID, rendezvous_relay=RENDEZVOUS_RELAY,
+            transit_relay=TRANSIT_RELAY
+        ):
         """
         Create a magic wormhole.
         """
-        self.wormhole = create(APPID, RENDEZVOUS_RELAY, reactor)
+        self.app_id = app_id
+        self.rendezvous_relay = rendezvous_relay
+        self.transit_relay = transit_relay
+
+        self.wormhole = create(self.app_id, self.rendezvous_relay, reactor)
         self.transit = None
 
-    def generate_code(self):
+    @inlineCallbacks
+    def generate_code(self, timeout=10):
         """
         Generate the code that the users at the two ends of the wormhole will
         have to exchange.
 
-        Return a Deferred that resolves into the code or rejects with Timeout.
+        Return a Deferred that resolves into the code.
         """
         self.wormhole.allocate_code()
-        deferred = self.wormhole.get_code()
-        return deferred
 
-    def connect(self, code):
+        deferred = self.wormhole.get_code()
+        deferred.addTimeout(timeout, reactor)
+
+        try:
+            code = yield deferred
+        except TimeoutError:
+            raise Timeout('could not connect to the server')
+
+        return returnValue(code)
+
+    @inlineCallbacks
+    def connect(self, code, timeout=10):
         """
         Connect to another wormhole client by its code generated. This has to
         be exchanged between the two users before the wormhole connects.
 
-        Return a Deferred that resolves upon successful connection or rejects
-        with Timeout.
+        Return a Deferred that resolves upon successful connection.
         """
         self.wormhole.set_code(code)
-        deferred = self.wormhole.get_code()
-        return deferred
 
-    def exchange_keys(self):
+        deferred = self.wormhole.get_code()
+        deferred.addTimeout(timeout, reactor)
+
+        try:
+            yield deferred
+        except TimeoutError:
+            raise Timeout('could not connect to the other end')
+
+    @inlineCallbacks
+    def exchange_keys(self, timeout=10):
         """
         Return a Deferred that resolves when the key exchange between the two
         clients has been completed.
@@ -50,11 +98,18 @@ class Wormhole:
         The Deferred resolves into the so-called verifier, a hash of the shared
         key, which can be compared by the users at both ends of the wormhole in
         order to make sure no man-in-the-middle attack is taking place.
-
-        The Deferred can reject with WrongPasswordError or Timeout.
         """
         deferred = self.wormhole.get_verifier()
-        return deferred
+        deferred.addTimeout(timeout, reactor)
+
+        try:
+            verifier = yield deferred
+        except TimeoutError:
+            raise Timeout('could not exchange keys with the other end')
+        except WrongPasswordError:
+            raise HumanError('the other end entered a wrong code')
+
+        return returnValue(verifier)
 
     def send_json(self, message):
         """
@@ -63,13 +118,23 @@ class Wormhole:
         self.wormhole.send_message(bytes(json.dumps(message), 'utf-8'))
 
     @inlineCallbacks
-    def await_json(self):
+    def await_json(self, timeout=10):
         """
         Return a Deferred that resolves into the next JSON message that comes
         out of the wormhole.
         """
-        message = yield self.wormhole.get_message()
-        return json.loads(str(message, 'utf-8'))
+        deferred = self.wormhole.get_message()
+        deferred.addTimeout(timeout, reactor)
+
+        try:
+            message = yield deferred
+            message = json.loads(str(message, 'utf-8'))
+        except TimeoutError:
+            raise Timeout('no message came from the other side')
+        except:
+            raise SuspiciousOperation('bad message came from the other side')
+
+        return returnValue(message)
 
     @inlineCallbacks
     def establish_transit(self):
@@ -129,6 +194,28 @@ class Wormhole:
         ack_record = json.loads(str(ack_record, 'utf-8'))
 
         record_pipe.close()
+
+    @inlineCallbacks
+    def await_offer(self):
+        """
+        Return a Deferred that resolves into a {filename, filesize} dict a
+        file offer is received from the other end of the wormhole.
+
+        The Deferred can reject with Timeout.
+
+        This method should be called by the receiving end of the wormhole.
+        """
+        offer = yield self.await_json()
+        print(offer)
+
+    @inlineCallbacks
+    def accept_offer(self, path):
+        """
+        Download the file offered to be sent by the other end of the wormhole.
+
+        This method should be called by the receiving end of the wormhole.
+        """
+        pass
 
     def close(self):
         """

@@ -141,10 +141,8 @@ class ReceiveScreen(Screen):
             self.connect_button_disabled = True
             self.connect_button_text = 'connecting'
 
-            try:
-                self.wormhole.close()
-            except AttributeError:
-                pass
+            try: self.wormhole.close()
+            except AttributeError: pass
 
             self.wormhole = Wormhole()
 
@@ -155,11 +153,16 @@ class ReceiveScreen(Screen):
             self.connect_button_disabled = True
             self.connect_button_text = 'exchanging keys'
             deferred = self.wormhole.exchange_keys()
-            deferred.addCallbacks(show_connected, ErrorPopup.show)
+            deferred.addCallbacks(await_offer, ErrorPopup.show)
 
-        def show_connected(*args):
+        def await_offer(*args):
             self.connect_button_disabled = True
             self.connect_button_text = 'connected'
+            deferred = self.wormhole.await_offer()
+            deferred.addCallbacks(show_offer, ErrorPopup.show)
+
+        def show_offer(*args):
+            for x in args: print(x)
 
         connect()
 
