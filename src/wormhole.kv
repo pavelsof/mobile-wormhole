@@ -111,13 +111,12 @@
             orientation: 'vertical'
 
             AnchorLayout:
-                Button:
-                    text: 'choose location'
-                    on_release: root.open_location_chooser()
+                Label:
+                    text: 'file name: {}'.format(root.file_name)
 
             AnchorLayout:
                 Label:
-                    text: basename(root.path) if root.path else ''
+                    text: 'file size: {}'.format(root.file_size)
 
         BoxLayout:
             orientation: 'horizontal'
@@ -129,4 +128,6 @@
 
             AnchorLayout:
                 Button:
-                    text: 'receive'
+                    disabled: root.accept_button_disabled
+                    text: root.accept_button_text
+                    on_release: root.accept_offer()

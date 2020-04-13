@@ -42,6 +42,7 @@ class SendScreen(Screen):
         """
         self.code = ''
         self.path = ''
+
         self.send_button_disabled = True
         self.send_button_text = 'waiting for code'
 
@@ -119,15 +120,31 @@ class SendScreen(Screen):
         """
         Called when the user leaves this screen.
         """
-        self.code = ''
-        self.path = ''
         self.wormhole.close()
 
 
 class ReceiveScreen(Screen):
-    path = StringProperty('')
-    connect_button_text = StringProperty('connect')
     connect_button_disabled = BooleanProperty(False)
+    connect_button_text = StringProperty('connect')
+
+    accept_button_disabled = BooleanProperty(True)
+    accept_button_text = StringProperty('waiting for offer')
+
+    file_name = StringProperty('-')
+    file_size = StringProperty('-')
+
+    def on_enter(self):
+        """
+        Called when the user enters this screen.
+        """
+        self.connect_button_disabled = False
+        self.connect_button_text = 'connect'
+
+        self.accept_button_disabled = True
+        self.accept_button_text = 'waiting for offer'
+
+        self.file_name = '-'
+        self.file_size = '-'
 
     def open_wormhole(self):
         """
@@ -141,9 +158,6 @@ class ReceiveScreen(Screen):
             self.connect_button_disabled = True
             self.connect_button_text = 'connecting'
 
-            try: self.wormhole.close()
-            except AttributeError: pass
-
             self.wormhole = Wormhole()
 
             deferred = self.wormhole.connect(code)
@@ -152,45 +166,44 @@ class ReceiveScreen(Screen):
         def exchange_keys(*args):
             self.connect_button_disabled = True
             self.connect_button_text = 'exchanging keys'
+
             deferred = self.wormhole.exchange_keys()
             deferred.addCallbacks(await_offer, ErrorPopup.show)
 
         def await_offer(*args):
             self.connect_button_disabled = True
             self.connect_button_text = 'connected'
+
             deferred = self.wormhole.await_offer()
             deferred.addCallbacks(show_offer, ErrorPopup.show)
 
-        def show_offer(*args):
-            for x in args: print(x)
+        def show_offer(offer):
+            self.file_name = str(offer['filename'])
+            self.file_size = str(offer['filesize'])
+
+            self.accept_button_disabled = False
+            self.accept_button_text = 'accept'
 
         connect()
 
-    def open_location_chooser(self):
+    def accept_offer(self):
         """
-        Called when the user releases the choose download location button.
-
-        The filechooser already asks for confirmation if the user chooses to
-        overwrite an already existing path.
+        Called when the user releases the accept button.
         """
-        def update_path(selection):
-            if selection:
-                try:
-                    path = os.path.normpath(selection[0])
-                except:
-                    ErrorPopup.show(
-                        'there is something wrong with the location you chose'
-                    )
-                    self.path = ''
-                else:
-                    self.path = path
-            else:
-                self.path = ''
+        path = os.path.join(get_downloads_dir(), self.file_name)
 
-        filechooser.save_file(
-            title='choose where to download the file',
-            on_selection=update_path
-        )
+        def accept_offer():
+            self.accept_button_disabled = True
+            self.accept_button_text = 'receiving'
+
+            deferred = self.wormhole.accept_offer(path)
+            deferred.addCallbacks(show_done, ErrorPopup.show)
+
+        def show_done(hex_digest):
+            self.accept_button_disabled = True
+            self.accept_button_text = 'done'
+
+        accept_offer()
 
     def on_leave(self):
         """
@@ -200,11 +213,6 @@ class ReceiveScreen(Screen):
             self.wormhole.close()
         except AttributeError:
             pass
-
-        self.code = ''
-        self.path = ''
-        self.connect_button_text = 'connect'
-        self.connect_button_disabled = False
 
 
 class WormholeApp(App):

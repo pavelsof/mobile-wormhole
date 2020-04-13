@@ -1,3 +1,4 @@
+import os.path
 from unittest.mock import Mock
 
 import pytest
@@ -15,11 +16,24 @@ def upstream(monkeypatch):
     upstream = Mock()
 
     def mock_init(self):
+        self.app_id = ''
+        self.transit_relay = ''
+        self.transit = None
         self.wormhole = upstream
 
     monkeypatch.setattr(Wormhole, '__init__', mock_init)
 
     return upstream
+
+
+@pytest.fixture
+def file_path(tmpdir):
+    file_path = os.path.join(tmpdir, 'file')
+
+    with open(file_path, 'w') as f:
+        f.write('hi!')
+
+    return file_path
 
 
 @pytest_twisted.inlineCallbacks
@@ -128,3 +142,38 @@ def test_await_json_works(upstream):
     wormhole = Wormhole()
     res = yield wormhole.await_json()
     assert res == {'answer': 42}
+
+
+@pytest_twisted.inlineCallbacks
+def test_send_file_error(upstream, file_path):
+    """
+    The Wormhole.send_file method should close the wormhole and reject with an
+    appropriate error if the other side sends an error message.
+    """
+    upstream.get_message = lambda: succeed(dict_to_bytes({'error': '!'}))
+
+    wormhole = Wormhole()
+
+    with pytest.raises(SuspiciousOperation) as exc_info:
+        yield wormhole.send_file(file_path)
+
+    assert str(exc_info.value) == '!'
+    assert upstream.close.called
+
+
+@pytest_twisted.inlineCallbacks
+def test_await_offer_error(upstream):
+    """
+    The Wormhole.await_offer method should close the wormhole and reject with
+    an appropriate error if the other side sends an error message.
+    """
+    upstream.get_message = lambda: succeed(dict_to_bytes({'error': '!'}))
+    upstream.derive_key = lambda *args: bytes('key', 'utf-8')
+
+    wormhole = Wormhole()
+
+    with pytest.raises(SuspiciousOperation) as exc_info:
+        yield wormhole.await_offer()
+
+    assert str(exc_info.value) == '!'
+    assert upstream.close.called

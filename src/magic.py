@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 
@@ -8,7 +9,7 @@ from wormhole import create
 from wormhole.cli.cmd_send import APPID
 from wormhole.cli.public_relay import RENDEZVOUS_RELAY, TRANSIT_RELAY
 from wormhole.errors import WrongPasswordError
-from wormhole.transit import TransitSender
+from wormhole.transit import TransitReceiver, TransitSender
 
 
 class HumanError(Exception):
@@ -35,6 +36,14 @@ class Timeout(Exception):
     pass
 
 
+class TransferError(Exception):
+    """
+    Raised when the file transfer failed, e.g. the connection drops before all
+    the bytes have been transferred.
+    """
+    pass
+
+
 class Wormhole:
 
     def __init__(
@@ -49,6 +58,8 @@ class Wormhole:
         self.transit_relay = transit_relay
 
         self.wormhole = create(self.app_id, self.rendezvous_relay, reactor)
+
+        self.offer = None
         self.transit = None
 
     @inlineCallbacks
@@ -137,38 +148,29 @@ class Wormhole:
         return returnValue(message)
 
     @inlineCallbacks
-    def establish_transit(self):
+    def send_file(self, file_path):
         """
+        Send a file down the wormhole. As per the file-transfer protocol this
+        involves the following steps:
+
+        - send a message with the details needed for establishing the transit;
+        - send a message with the offer, i.e. the name and size of the file;
+        - run a loop waiting for the response(s) of the other end.
+
+        Return a Deferred that resolves when the file has been transferred.
         """
-        self.transit = TransitSender(TRANSIT_RELAY)
+        assert self.transit is None and os.path.exists(file_path)
+
+        self.transit = TransitSender(self.transit_relay)
         our_hints = yield self.transit.get_connection_hints()
+        our_abilities = self.transit.get_connection_abilities()
 
         self.send_json({
             'transit': {
-                'abilities-v1': self.transit.get_connection_abilities(),
+                'abilities-v1': our_abilities,
                 'hints-v1': our_hints,
             }
         })
-
-        response = yield self.await_json()
-        self.transit.add_connection_hints(response['transit']['hints-v1'])
-
-        transit_key = self.wormhole.derive_key(
-            '{}/transit-key'.format(APPID), self.transit.TRANSIT_KEY_LENGTH
-        )
-        self.transit.set_transit_key(transit_key)
-
-    @inlineCallbacks
-    def send_file(self, file_path):
-        """
-        Send a file down the wormhole.
-
-        The Deferred can reject with TransitError or Timeout.
-        """
-        if not self.transit:
-            yield self.establish_transit()
-
-        record_pipe = yield self.transit.connect()
 
         self.send_json({
             'offer': {
@@ -179,43 +181,144 @@ class Wormhole:
             }
         })
 
-        response = yield self.await_json()
+        while True:
+            message = yield self.await_json()
 
-        try:
-            assert response['answer']['file_ack'] == 'ok'
-        except (AssertionError, KeyError):
-            raise
+            if 'error' in message:
+                yield self.close()
+                raise SuspiciousOperation(str(message['error']))
+
+            if 'transit' in message:
+                self.transit.add_connection_hints(
+                    message['transit']['hints-v1']
+                )
+
+                transit_key = self.wormhole.derive_key(
+                    '{}/transit-key'.format(self.app_id),
+                    self.transit.TRANSIT_KEY_LENGTH
+                )
+                self.transit.set_transit_key(transit_key)
+
+            if 'answer' in message:
+                try:
+                    assert message['answer']['file_ack'] == 'ok'
+                except (AssertionError, KeyError):
+                    raise HumanError('the other side declined the file')
+                else:
+                    hex_digest = yield self.transfer_file(file_path)
+                    return returnValue(hex_digest)
+
+    @inlineCallbacks
+    def transfer_file(self, file_path):
+        """
+        Send a file via the transit. Assume that the latter has been already
+        established. If the other end provides a hash when done, check it.
+
+        Helper for the send_file method above.
+        """
+        record_pipe = yield self.transit.connect()
+        hasher = hashlib.sha256()
+
+        def func(data):
+            hasher.update(data)
+            return data
 
         with open(file_path, 'rb') as f:
             file_sender = FileSender()
-            yield file_sender.beginFileTransfer(f, record_pipe)
+            yield file_sender.beginFileTransfer(f, record_pipe, func)
 
         ack_record = yield record_pipe.receive_record()
         ack_record = json.loads(str(ack_record, 'utf-8'))
 
-        record_pipe.close()
+        yield record_pipe.close()
+
+        try:
+            assert ack_record['ack'] == 'ok'
+            if ack_record['sha256']:
+                assert ack_record['sha256'] == hasher.hexdigest()
+        except (AssertionError, KeyError):
+            raise TransferError('file transfer failed')
+
+        return returnValue(hasher.hexdigest())
 
     @inlineCallbacks
     def await_offer(self):
         """
-        Return a Deferred that resolves into a {filename, filesize} dict a
-        file offer is received from the other end of the wormhole.
+        Start waiting for the other end of the wormhole to send a file offer.
 
-        The Deferred can reject with Timeout.
+        As per the file-transfer protocol this involves running a loop waiting
+        for both transit details and the offer itself. The transit should be
+        already established when the incoming file offer is processed.
 
-        This method should be called by the receiving end of the wormhole.
+        Return a Deferred that resolves into a {filename, filesize} dict.
         """
-        offer = yield self.await_json()
-        print(offer)
+        assert self.transit is None
+
+        self.transit = TransitReceiver(self.transit_relay)
+
+        transit_key = self.wormhole.derive_key(
+            '{}/transit-key'.format(self.app_id),
+            self.transit.TRANSIT_KEY_LENGTH
+        )
+        self.transit.set_transit_key(transit_key)
+
+        while True:
+            message = yield self.await_json()
+
+            if 'error' in message:
+                yield self.close()
+                raise SuspiciousOperation(str(message['error']))
+
+            if 'transit' in message:
+                self.transit.add_connection_hints(
+                    message['transit']['hints-v1']
+                )
+                our_hints = yield self.transit.get_connection_hints()
+                our_abilities = self.transit.get_connection_abilities()
+
+                self.send_json({
+                    'transit': {
+                        'abilities-v1': our_abilities,
+                        'hints-v1': our_hints,
+                    }
+                })
+
+            if 'offer' in message:
+                self.offer = message['offer']
+                return returnValue(self.offer['file'])
 
     @inlineCallbacks
-    def accept_offer(self, path):
+    def accept_offer(self, file_path):
         """
-        Download the file offered to be sent by the other end of the wormhole.
+        Download the file sent by the other end and write it to the specified
+        location. Assume that the transit has been already established.
 
-        This method should be called by the receiving end of the wormhole.
+        Return a Deferred that resolves into the hex digest of the transferred
+        data once the download is completed.
         """
-        pass
+        assert self.offer and self.transit
+
+        self.send_json({'answer': {'file_ack': 'ok'}})
+
+        record_pipe = yield self.transit.connect()
+        hasher = hashlib.sha256()
+        size = self.offer['file']['filesize']
+
+        with open(file_path, 'wb') as f:
+            received = yield record_pipe.writeToFile(
+                f, size, progress=None, hasher=hasher.update
+            )
+
+            if received != size:
+                raise TransferError('download did not complete')
+
+        ack_record = {'ack': 'ok', 'sha256': hasher.hexdigest()}
+        ack_record = bytes(json.dumps(ack_record), 'utf-8')
+        yield record_pipe.send_record(ack_record)
+
+        yield record_pipe.close()
+
+        return returnValue(hasher.hexdigest())
 
     def close(self):
         """
