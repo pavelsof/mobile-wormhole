@@ -31,20 +31,21 @@ class HomeScreen(Screen):
 
 
 class SendScreen(Screen):
-    code = StringProperty('')
-    path = StringProperty('')
     send_button_text = StringProperty('send')
     send_button_disabled = BooleanProperty(False)
+
+    code = StringProperty('')
+    path = StringProperty('')
 
     def on_enter(self):
         """
         Called when the user enters this screen.
         """
-        self.code = ''
-        self.path = ''
-
         self.send_button_disabled = True
         self.send_button_text = 'waiting for code'
+
+        self.code = ''
+        self.path = ''
 
         self.wormhole = Wormhole()
 
@@ -104,13 +105,13 @@ class SendScreen(Screen):
             deferred = self.wormhole.exchange_keys()
             deferred.addCallbacks(send_file, ErrorPopup.show)
 
-        def send_file(*args):
+        def send_file(verifier):
             self.send_button_disabled = True
             self.send_button_text = 'sending file'
             deferred = self.wormhole.send_file(file_path)
             deferred.addCallbacks(show_done, ErrorPopup.show)
 
-        def show_done(*args):
+        def show_done(hex_digest):
             self.send_button_disabled = True
             self.send_button_text = 'done'
 
@@ -146,6 +147,8 @@ class ReceiveScreen(Screen):
         self.file_name = '-'
         self.file_size = '-'
 
+        self.ids.code_input.text = ''
+
     def open_wormhole(self):
         """
         Called when the user releases the connect button.
@@ -163,14 +166,14 @@ class ReceiveScreen(Screen):
             deferred = self.wormhole.connect(code)
             deferred.addCallbacks(exchange_keys, ErrorPopup.show)
 
-        def exchange_keys(*args):
+        def exchange_keys(code):
             self.connect_button_disabled = True
             self.connect_button_text = 'exchanging keys'
 
             deferred = self.wormhole.exchange_keys()
             deferred.addCallbacks(await_offer, ErrorPopup.show)
 
-        def await_offer(*args):
+        def await_offer(verifier):
             self.connect_button_disabled = True
             self.connect_button_text = 'connected'
 
@@ -192,6 +195,12 @@ class ReceiveScreen(Screen):
         """
         path = os.path.join(get_downloads_dir(), self.file_name)
 
+        def show_error():
+            ErrorPopup.show(
+                'you cannot receive a file if the app cannot write it'
+            )
+
+        @ensure_storage_perms(show_error)
         def accept_offer():
             self.accept_button_disabled = True
             self.accept_button_text = 'receiving'

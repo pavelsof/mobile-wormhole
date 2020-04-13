@@ -6,6 +6,7 @@ from kivy.utils import platform as PLATFORM
 if PLATFORM == 'android':
     from android.permissions import Permission
     from android.permissions import check_permission, request_permissions
+    from android.storage import primary_external_storage_path
     from jnius import autoclass
 
 
@@ -47,6 +48,9 @@ def get_downloads_dir():
     """
     if PLATFORM == 'android':
         Environment = autoclass('android.os.Environment')
-        return Environment.DIRECTORY_DOWNLOADS
+        return os.path.join(
+            primary_external_storage_path(),
+            Environment.DIRECTORY_DOWNLOADS
+        )
     else:
         return os.getcwd()

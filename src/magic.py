@@ -45,6 +45,27 @@ class TransferError(Exception):
 
 
 class Wormhole:
+    """
+    Wrapper around magic wormhole's code that makes it easier to reason about
+    what is going on, at least for me. Usage for sending files:
+
+        wormhole = Wormhole()
+        code = yield wormhole.generate_code()
+        verifier = yield wormhole.exchange_keys()
+        hex_digest = yield wormhole.send_file(file_path)
+
+    Usage for receiving files:
+
+        wormhole = Wormhole()
+        code = yield wormhole.connect(code)
+        verifier = yield wormhole.exchange_keys()
+        offer = yield wormhole.await_offer()
+        hex_digest = yield wormhole.accept_offer(file_path)
+
+    Almost all methods return Deferred instances that either resolve into the
+    respective value (e.g. the generated code) or reject with one of the four
+    errors defined above.
+    """
 
     def __init__(
             self, app_id=APPID, rendezvous_relay=RENDEZVOUS_RELAY,
@@ -96,9 +117,11 @@ class Wormhole:
         deferred.addTimeout(timeout, reactor)
 
         try:
-            yield deferred
+            code = yield deferred
         except TimeoutError:
             raise Timeout('could not connect to the other end')
+
+        return returnValue(code)
 
     @inlineCallbacks
     def exchange_keys(self, timeout=10):
@@ -129,7 +152,7 @@ class Wormhole:
         self.wormhole.send_message(bytes(json.dumps(message), 'utf-8'))
 
     @inlineCallbacks
-    def await_json(self, timeout=10):
+    def await_json(self, timeout=600):
         """
         Return a Deferred that resolves into the next JSON message that comes
         out of the wormhole.
@@ -298,11 +321,13 @@ class Wormhole:
         """
         assert self.offer and self.transit
 
+        size = self.offer['file']['filesize']
+        self.offer = None
+
         self.send_json({'answer': {'file_ack': 'ok'}})
 
         record_pipe = yield self.transit.connect()
         hasher = hashlib.sha256()
-        size = self.offer['file']['filesize']
 
         with open(file_path, 'wb') as f:
             received = yield record_pipe.writeToFile(
