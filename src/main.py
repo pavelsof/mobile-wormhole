@@ -8,6 +8,7 @@ from kivy.support import install_twisted_reactor
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import NoTransition, Screen, ScreenManager
 from plyer import filechooser
+from twisted.python.failure import Failure
 
 install_twisted_reactor()
 
@@ -16,14 +17,28 @@ from cross import ensure_storage_perms, get_downloads_dir
 
 
 class ErrorPopup(Popup):
-    error = StringProperty('Something bad happened!')
+    title = StringProperty('Error')
+    message = StringProperty('Something bad happened!')
 
     @staticmethod
     def show(error):
         """
-        Show a hopefully user-friendly error message.
+        Open a popup with a (hopefully) user-friendly error message.
+
+        The given argument can be either an Exception, or a Twisted Failure, or
+        the error message itself as a string.
         """
-        Factory.ErrorPopup(error=str(error)).open()
+        if isinstance(error, Failure):
+            error = error.value
+
+        message = str(error)
+
+        if hasattr(error, 'verbose_name'):
+            title = error.verbose_name
+        else:
+            title = 'Error'
+
+        Factory.ErrorPopup(title=title, message=message).open()
 
 
 class HomeScreen(Screen):
@@ -68,7 +83,7 @@ class SendScreen(Screen):
                     assert os.path.exists(path) and os.path.isfile(path)
                 except:
                     ErrorPopup.show(
-                        'there is something wrong about the file you chose'
+                        'There is something wrong about the file you chose.'
                     )
                     self.path = ''
                 else:
@@ -78,7 +93,7 @@ class SendScreen(Screen):
 
         def show_error():
             ErrorPopup.show(
-                'you cannot send a file if the app cannot access it'
+                'You cannot send a file if the app cannot access it.'
             )
 
         @ensure_storage_perms(show_error)
@@ -95,7 +110,7 @@ class SendScreen(Screen):
         Called when the user releases the send button.
         """
         if not self.path:
-            return ErrorPopup.show('please choose a file')
+            return ErrorPopup.show('Please choose a file to send.')
         else:
             file_path = self.path
 
@@ -155,7 +170,7 @@ class ReceiveScreen(Screen):
         """
         code = self.ids.code_input.text.strip()
         if not code:
-            return ErrorPopup.show('please enter a code')
+            return ErrorPopup.show('Please enter a code.')
 
         def connect():
             self.connect_button_disabled = True
@@ -193,11 +208,12 @@ class ReceiveScreen(Screen):
         """
         Called when the user releases the accept button.
         """
-        path = os.path.join(get_downloads_dir(), self.file_name)
+        dir_path = get_downloads_dir()
+        file_path = os.path.join(dir_path, self.file_name)
 
         def show_error():
             ErrorPopup.show(
-                'you cannot receive a file if the app cannot write it'
+                'You cannot receive a file if the app cannot write it.'
             )
 
         @ensure_storage_perms(show_error)
@@ -205,7 +221,7 @@ class ReceiveScreen(Screen):
             self.accept_button_disabled = True
             self.accept_button_text = 'receiving'
 
-            deferred = self.wormhole.accept_offer(path)
+            deferred = self.wormhole.accept_offer(file_path)
             deferred.addCallbacks(show_done, ErrorPopup.show)
 
         def show_done(hex_digest):

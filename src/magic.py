@@ -2,13 +2,13 @@ import hashlib
 import json
 import os
 
+import wormhole.errors
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue, TimeoutError
 from twisted.protocols.basic import FileSender
 from wormhole import create
 from wormhole.cli.cmd_send import APPID
 from wormhole.cli.public_relay import RENDEZVOUS_RELAY, TRANSIT_RELAY
-from wormhole.errors import WrongPasswordError
 from wormhole.transit import TransitReceiver, TransitSender
 
 
@@ -17,7 +17,7 @@ class HumanError(Exception):
     Raised when one of the humans at either end of the wormhole does something
     that breaks it, e.g. enters the wrong code.
     """
-    pass
+    verbose_name = 'Possible human error'
 
 
 class SuspiciousOperation(Exception):
@@ -25,7 +25,7 @@ class SuspiciousOperation(Exception):
     Raised when things do not go according to the protocol, e.g. a message that
     cannot be parsed is received.
     """
-    pass
+    verbose_name = 'Suspicious operation'
 
 
 class Timeout(Exception):
@@ -33,7 +33,7 @@ class Timeout(Exception):
     Raised when the rendezvous server or the other end of the wormhole take
     longer than expected to respond.
     """
-    pass
+    verbose_name = 'Timeout'
 
 
 class TransferError(Exception):
@@ -41,7 +41,7 @@ class TransferError(Exception):
     Raised when the file transfer failed, e.g. the connection drops before all
     the bytes have been transferred.
     """
-    pass
+    verbose_name = 'Transfer error'
 
 
 class Wormhole:
@@ -98,8 +98,11 @@ class Wormhole:
 
         try:
             code = yield deferred
-        except TimeoutError:
-            raise Timeout('could not connect to the server')
+        except (wormhole.errors.ServerConnectionError, TimeoutError):
+            raise Timeout((
+                'The relay server cannot be reached. '
+                'Please double-check your Internet connection.'
+            ))
 
         return returnValue(code)
 
@@ -119,7 +122,10 @@ class Wormhole:
         try:
             code = yield deferred
         except TimeoutError:
-            raise Timeout('could not connect to the other end')
+            raise Timeout((
+                'The relay server cannot be reached. '
+                'Please double-check your Internet connection.'
+            ))
 
         return returnValue(code)
 
@@ -139,9 +145,12 @@ class Wormhole:
         try:
             verifier = yield deferred
         except TimeoutError:
-            raise Timeout('could not exchange keys with the other end')
-        except WrongPasswordError:
-            raise HumanError('the other end entered a wrong code')
+            raise Timeout('The key exchange with the other side timed out.')
+        except wormhole.errors.WrongPasswordError:
+            raise HumanError((
+                'The key exchange with the other side failed. '
+                'The most probable cause for this is mistyping the code.'
+            ))
 
         return returnValue(verifier)
 
@@ -164,9 +173,13 @@ class Wormhole:
             message = yield deferred
             message = json.loads(str(message, 'utf-8'))
         except TimeoutError:
-            raise Timeout('no message came from the other side')
+            raise Timeout((
+                'The message exchange with the other side timed out.'
+            ))
         except:
-            raise SuspiciousOperation('bad message came from the other side')
+            raise SuspiciousOperation((
+                'The other side sent a badly formatted message.'
+            ))
 
         return returnValue(message)
 
@@ -226,7 +239,7 @@ class Wormhole:
                 try:
                     assert message['answer']['file_ack'] == 'ok'
                 except (AssertionError, KeyError):
-                    raise HumanError('the other side declined the file')
+                    raise HumanError('The other side declined the file.')
                 else:
                     hex_digest = yield self.transfer_file(file_path)
                     return returnValue(hex_digest)
@@ -260,7 +273,7 @@ class Wormhole:
             if ack_record['sha256']:
                 assert ack_record['sha256'] == hasher.hexdigest()
         except (AssertionError, KeyError):
-            raise TransferError('file transfer failed')
+            raise TransferError('The file transfer failed.')
 
         return returnValue(hasher.hexdigest())
 
@@ -335,7 +348,7 @@ class Wormhole:
             )
 
             if received != size:
-                raise TransferError('download did not complete')
+                raise TransferError('The download could not be completed.')
 
         ack_record = {'ack': 'ok', 'sha256': hasher.hexdigest()}
         ack_record = bytes(json.dumps(ack_record), 'utf-8')

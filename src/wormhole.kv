@@ -10,13 +10,16 @@
 
 <ErrorPopup>:
     size_hint: 0.8, 0.5
-    title: 'Error'
+    title: root.title
 
     BoxLayout:
         orientation: 'vertical'
 
-        Label:
-            text: root.error
+        AnchorLayout:
+            Label:
+                text: root.message
+                text_size: self.size
+                valign: 'middle'
 
         AnchorLayout:
             Button:
