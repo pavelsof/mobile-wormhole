@@ -7,7 +7,7 @@
     padding_y: 30
     size_hint: None, None
     strip: True
-    width: 300
+    width: 250
 
 
 <Label>:
@@ -81,13 +81,16 @@
                 size_hint_y: None
 
                 Label:
-                    halign: 'center'
-                    text: 'your code is'
+                    text: 'your code is' if root.has_code else 'generating code'
 
                 Label:
-                    font_size: 40
-                    halign: 'center'
+                    font_size: 50
+                    padding_y: 10
                     text: root.code
+
+                Label:
+                    font_size: 20
+                    text: '(copied in your clipboard)' if root.has_code else ''
 
         BoxLayout:
             orientation: 'vertical'

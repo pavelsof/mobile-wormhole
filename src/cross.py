@@ -8,7 +8,7 @@ if PLATFORM == 'android':
     from android.permissions import Permission
     from android.permissions import check_permission, request_permissions
     from android.storage import primary_external_storage_path
-    from jnius import autoclass
+    from jnius import autoclass, cast
 
 
 def ensure_storage_perms(fallback_func):
@@ -62,13 +62,16 @@ def open_dir(path):
     Open the specified directory.
     """
     if PLATFORM == 'android':
+        AndroidString = autoclass('java.lang.String')
+        Document = autoclass('android.provider.DocumentsContract$Document')
         Intent = autoclass('android.content.Intent')
         Uri = autoclass('android.net.Uri')
 
         intent = Intent()
         intent.setAction(Intent.ACTION_VIEW)
-        intent.setDataAndType(Uri.parse(path), 'resource/folder')
+        intent.setDataAndType(Uri.parse(path), Document.MIME_TYPE_DIR)
 
-        mActivity.startActivity(intent)
+        title = cast('java.lang.CharSequence', AndroidString('Open dir with'))
+        mActivity.startActivity(Intent.createChooser(intent, title))
     else:
         pass

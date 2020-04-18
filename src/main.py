@@ -1,6 +1,7 @@
 import os.path
 
 from kivy.app import App
+from kivy.core.clipboard import Clipboard
 from kivy.core.window import Window
 from kivy.factory import Factory
 from kivy.properties import BooleanProperty, ObjectProperty, StringProperty
@@ -49,6 +50,7 @@ class SendScreen(Screen):
     send_button_text = StringProperty('send')
     send_button_disabled = BooleanProperty(False)
 
+    has_code = BooleanProperty(False)
     code = StringProperty('…')
     path = StringProperty('…')
 
@@ -59,15 +61,18 @@ class SendScreen(Screen):
         self.send_button_disabled = True
         self.send_button_text = 'waiting for code'
 
+        self.has_code = False
         self.code = '…'
         self.path = '…'
 
         self.wormhole = Wormhole()
 
         def update_code(code):
+            self.has_code = True
             self.code = code
             self.send_button_disabled = False
             self.send_button_text = 'send'
+            Clipboard.copy(code)
 
         deferred = self.wormhole.generate_code()
         deferred.addCallbacks(update_code, ErrorPopup.show)
@@ -117,7 +122,7 @@ class SendScreen(Screen):
         def exchange_keys():
             self.send_button_disabled = True
             self.send_button_text = 'exchanging keys'
-            deferred = self.wormhole.exchange_keys()
+            deferred = self.wormhole.exchange_keys(timeout=600)
             deferred.addCallbacks(send_file, ErrorPopup.show)
 
         def send_file(verifier):
@@ -173,6 +178,7 @@ class ReceiveScreen(Screen):
         Called when the user releases the connect button.
         """
         code = self.ids.code_input.text.strip()
+        code = '-'.join(code.split())
         if not code:
             return ErrorPopup.show('Please enter a code.')
 
