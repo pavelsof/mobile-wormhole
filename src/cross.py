@@ -4,6 +4,7 @@ from kivy.utils import platform as PLATFORM
 
 
 if PLATFORM == 'android':
+    from android import mActivity
     from android.permissions import Permission
     from android.permissions import check_permission, request_permissions
     from android.storage import primary_external_storage_path
@@ -54,3 +55,20 @@ def get_downloads_dir():
         )
     else:
         return os.getcwd()
+
+
+def open_dir(path):
+    """
+    Open the specified directory.
+    """
+    if PLATFORM == 'android':
+        Intent = autoclass('android.content.Intent')
+        Uri = autoclass('android.net.Uri')
+
+        intent = Intent()
+        intent.setAction(Intent.ACTION_VIEW)
+        intent.setDataAndType(Uri.parse(path), 'resource/folder')
+
+        mActivity.startActivity(intent)
+    else:
+        pass

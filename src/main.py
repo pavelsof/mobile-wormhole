@@ -3,7 +3,7 @@ import os.path
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.factory import Factory
-from kivy.properties import BooleanProperty, StringProperty
+from kivy.properties import BooleanProperty, ObjectProperty, StringProperty
 from kivy.support import install_twisted_reactor
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import NoTransition, Screen, ScreenManager
@@ -13,7 +13,7 @@ from twisted.python.failure import Failure
 install_twisted_reactor()
 
 from magic import Wormhole
-from cross import ensure_storage_perms, get_downloads_dir
+from cross import ensure_storage_perms, get_downloads_dir, open_dir
 
 
 class ErrorPopup(Popup):
@@ -144,6 +144,7 @@ class ReceiveScreen(Screen):
     connect_button_text = StringProperty('connect')
 
     accept_button_disabled = BooleanProperty(True)
+    accept_button_func = ObjectProperty(None)
     accept_button_text = StringProperty('waiting for offer')
 
     file_name = StringProperty('…')
@@ -153,10 +154,13 @@ class ReceiveScreen(Screen):
         """
         Called just before the user enters this screen.
         """
+        self.downloads_dir = get_downloads_dir()
+
         self.connect_button_disabled = False
         self.connect_button_text = 'connect'
 
         self.accept_button_disabled = True
+        self.accept_button_func = self.accept_offer
         self.accept_button_text = 'waiting for offer'
 
         self.file_name = '…'
@@ -208,8 +212,7 @@ class ReceiveScreen(Screen):
         """
         Called when the user releases the accept button.
         """
-        dir_path = get_downloads_dir()
-        file_path = os.path.join(dir_path, self.file_name)
+        file_path = os.path.join(self.downloads_dir, self.file_name)
 
         def show_error():
             ErrorPopup.show(
@@ -225,10 +228,18 @@ class ReceiveScreen(Screen):
             deferred.addCallbacks(show_done, ErrorPopup.show)
 
         def show_done(hex_digest):
-            self.accept_button_disabled = True
-            self.accept_button_text = 'done'
+            self.accept_button_disabled = False
+            self.accept_button_func = self.open_dir
+            self.accept_button_text = 'open dir'
 
         accept_offer()
+
+    def open_dir(self):
+        """
+        Called when the user presses the accept button after the file transfer
+        has been completed.
+        """
+        open_dir(self.downloads_dir)
 
     def on_leave(self):
         """
