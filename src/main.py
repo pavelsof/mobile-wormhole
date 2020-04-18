@@ -49,18 +49,18 @@ class SendScreen(Screen):
     send_button_text = StringProperty('send')
     send_button_disabled = BooleanProperty(False)
 
-    code = StringProperty('')
-    path = StringProperty('')
+    code = StringProperty('…')
+    path = StringProperty('…')
 
-    def on_enter(self):
+    def on_pre_enter(self):
         """
-        Called when the user enters this screen.
+        Called just before the user enters this screen.
         """
         self.send_button_disabled = True
         self.send_button_text = 'waiting for code'
 
-        self.code = ''
-        self.path = ''
+        self.code = '…'
+        self.path = '…'
 
         self.wormhole = Wormhole()
 
@@ -146,12 +146,12 @@ class ReceiveScreen(Screen):
     accept_button_disabled = BooleanProperty(True)
     accept_button_text = StringProperty('waiting for offer')
 
-    file_name = StringProperty('-')
-    file_size = StringProperty('-')
+    file_name = StringProperty('…')
+    file_size = StringProperty('…')
 
-    def on_enter(self):
+    def on_pre_enter(self):
         """
-        Called when the user enters this screen.
+        Called just before the user enters this screen.
         """
         self.connect_button_disabled = False
         self.connect_button_text = 'connect'
@@ -159,8 +159,8 @@ class ReceiveScreen(Screen):
         self.accept_button_disabled = True
         self.accept_button_text = 'waiting for offer'
 
-        self.file_name = '-'
-        self.file_size = '-'
+        self.file_name = '…'
+        self.file_size = '…'
 
         self.ids.code_input.text = ''
 

@@ -3,23 +3,42 @@
 
 <Button>:
     font_size: 30
-    height: 100
+    halign: 'center'
+    padding_y: 30
     size_hint: None, None
+    strip: True
     width: 300
+
+
+<Label>:
+    font_size: 30
+    halign: 'center'
+    height: self.texture_size[1]
+    line_height: 1
+    size_hint_y: None
+    strip: True
+    text_size: self.width - 16, None
+    valign: 'middle'
+
+
+<TextInput>:
+    font_size: 30
+    height: self.minimum_height
+    padding: 20, 20
 
 
 <ErrorPopup>:
     size_hint: 0.8, 0.5
     title: root.title
+    title_size: 30
 
     BoxLayout:
         orientation: 'vertical'
 
         AnchorLayout:
             Label:
+                halign: 'left'
                 text: root.message
-                text_size: self.size
-                valign: 'middle'
 
         AnchorLayout:
             Button:
@@ -32,6 +51,12 @@
 
     BoxLayout:
         orientation: 'vertical'
+
+        AnchorLayout:
+            Label:
+                font_size: 50
+                halign: 'center'
+                text: 'Wormhole'
 
         AnchorLayout:
             Button:
@@ -50,14 +75,19 @@
     BoxLayout:
         orientation: 'vertical'
 
-        BoxLayout:
-            orientation: 'vertical'
+        AnchorLayout:
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
 
-            Label:
-                text: 'your code is'
+                Label:
+                    halign: 'center'
+                    text: 'your code is'
 
-            Label:
-                text: root.code
+                Label:
+                    font_size: 40
+                    halign: 'center'
+                    text: root.code
 
         BoxLayout:
             orientation: 'vertical'
@@ -68,8 +98,12 @@
                     on_release: root.open_file_chooser()
 
             AnchorLayout:
-                Label:
-                    text: basename(root.path) if root.path else ''
+                BoxLayout:
+                    padding_x: 50
+                    size_hint_y: None
+
+                    Label:
+                        text: 'file name: {}'.format(basename(root.path) if root.path else '-')
 
         BoxLayout:
             orientation: 'horizontal'
@@ -97,12 +131,9 @@
 
             AnchorLayout:
                 TextInput:
-                    font_size: 30
-                    height: 100
                     id: code_input
                     multiline: False
-                    size_hint: None, None
-                    width: 500
+                    size_hint: 0.8, None
 
             AnchorLayout:
                 Button:
@@ -110,14 +141,14 @@
                     text: root.connect_button_text
                     on_release: root.open_wormhole()
 
-        BoxLayout:
-            orientation: 'vertical'
+        AnchorLayout:
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
 
-            AnchorLayout:
                 Label:
                     text: 'file name: {}'.format(root.file_name)
 
-            AnchorLayout:
                 Label:
                     text: 'file size: {}'.format(root.file_size)
 
