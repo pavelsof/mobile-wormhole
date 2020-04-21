@@ -1,5 +1,4 @@
 #:kivy 1.11.1
-#:import basename os.path.basename
 
 <Button>:
     font_size: 30
@@ -106,7 +105,7 @@
                     size_hint_y: None
 
                     Label:
-                        text: 'file name: {}'.format(basename(root.path) if root.path else '-')
+                        text: 'file name: {}'.format(root.file_name)
 
         BoxLayout:
             orientation: 'horizontal'

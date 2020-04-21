@@ -52,7 +52,9 @@ class SendScreen(Screen):
 
     has_code = BooleanProperty(False)
     code = StringProperty('…')
-    path = StringProperty('…')
+
+    file_name = StringProperty('…')
+    file_size = StringProperty('…')
 
     def on_pre_enter(self):
         """
@@ -63,7 +65,10 @@ class SendScreen(Screen):
 
         self.has_code = False
         self.code = '…'
-        self.path = '…'
+
+        self.file_path = None
+        self.file_name = '…'
+        self.file_size = '…'
 
         self.wormhole = Wormhole()
 
@@ -87,14 +92,20 @@ class SendScreen(Screen):
                     path = os.path.normpath(selection[0])
                     assert os.path.exists(path) and os.path.isfile(path)
                 except:
-                    ErrorPopup.show(
-                        'There is something wrong about the file you chose.'
-                    )
-                    self.path = ''
+                    ErrorPopup.show((
+                        'There is something wrong about the file you chose. '
+                        'One possible reason is an issue with some Androids '
+                        'where a file cannot be directly selected from the '
+                        '"Downloads" section and instead you have to reach it '
+                        'some other way, e.g. "Phone" -> "Downloads".'
+                    ))
                 else:
-                    self.path = path
-            else:
-                self.path = ''
+                    self.file_path = path
+                    self.file_name = os.path.basename(self.file_path)
+                    return
+
+            self.file_path = None
+            self.file_name = '…'
 
         def show_error():
             ErrorPopup.show(
@@ -114,10 +125,8 @@ class SendScreen(Screen):
         """
         Called when the user releases the send button.
         """
-        if not self.path:
+        if not self.file_path:
             return ErrorPopup.show('Please choose a file to send.')
-        else:
-            file_path = self.path
 
         def exchange_keys():
             self.send_button_disabled = True
@@ -128,7 +137,7 @@ class SendScreen(Screen):
         def send_file(verifier):
             self.send_button_disabled = True
             self.send_button_text = 'sending file'
-            deferred = self.wormhole.send_file(file_path)
+            deferred = self.wormhole.send_file(self.file_path)
             deferred.addCallbacks(show_done, ErrorPopup.show)
 
         def show_done(hex_digest):
