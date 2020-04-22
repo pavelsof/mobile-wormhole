@@ -36,7 +36,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3, kivy, plyer, attrs, autobahn[twisted], automat, cffi, click, constantly, cryptography, hkdf, humanize, hyperlink, idna, incremental, magic-wormhole, pyasn1-modules, pyasn1, pycparser, pyhamcrest, pynacl, pyopenssl, service-identity, six, spake2, tqdm, twisted[tls], txaio, txtorcon, zope.interface
+requirements = python3, kivy, plyer, attrs, autobahn[twisted], automat, cffi, click, constantly, cryptography, hkdf, humanize, hyperlink, idna, incremental, magic-wormhole, pyasn1-modules, pyasn1, pycparser, pyhamcrest, pynacl, pyopenssl, service-identity, six, spake2, tqdm, twisted, txaio, txtorcon, zope.interface
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
