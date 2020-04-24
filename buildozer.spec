@@ -28,7 +28,7 @@ source.include_exts = py,png,jpg,kv,atlas
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 0.1
+version = 0.1.0
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]
@@ -88,19 +88,19 @@ fullscreen = 0
 android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE
 
 # (int) Target Android API, should be as high as possible.
-#android.api = 27
+android.api = 28
 
 # (int) Minimum API your APK will support.
-#android.minapi = 21
+android.minapi = 21
 
 # (int) Android SDK version to use
-#android.sdk = 20
+#android.sdk = 28
 
 # (str) Android NDK version to use
-#android.ndk = 17c
+android.ndk = 19c
 
 # (int) Android NDK API to use. This is the minimum API your app will support, it should usually match android.minapi.
-#android.ndk_api = 21
+android.ndk_api = 21
 
 # (bool) Use --private data storage (True) or --dir public storage (False)
 #android.private_storage = True
@@ -219,7 +219,8 @@ android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE
 #android.copy_libs = 1
 
 # (str) The Android arch to build for, choices: armeabi-v7a, arm64-v8a, x86, x86_64
-android.arch = armeabi-v7a
+#android.arch = armeabi-v7a
+android.arch = arm64-v8a
 
 #
 # Python for android (p4a) specific
