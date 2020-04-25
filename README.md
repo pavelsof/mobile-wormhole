@@ -1,13 +1,13 @@
 # wormhole
 
-This is a work-in-progress mobile client for the [Magic Wormhole][magic-wormhole] protocol.
+This is a work-in-progress mobile client for the [magic wormhole][magic-wormhole] protocol.
 
 ## setup
 
 ```sh
 # create a virtual environment
 # it should work with 3.7, have not tried with others
-python3.7 -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 
 # install the dependencies
@@ -23,6 +23,6 @@ buildozer android debug deploy run logcat
 
 ## licence
 
-GPL; you can do what you want with this code as long as you let others do the same.
+GPL. You can do what you want with this code as long as you let others do the same.
 
 [magic-wormhole]: https://github.com/warner/magic-wormhole
