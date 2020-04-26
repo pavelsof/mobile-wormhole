@@ -14,6 +14,9 @@ source venv/bin/activate
 # pip-sync is also fine
 pip install -r requirements.txt
 
+# run the (too) few unit tests
+pytest tests
+
 # run locally
 python src/main.py
 

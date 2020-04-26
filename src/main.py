@@ -14,7 +14,9 @@ from twisted.python.failure import Failure
 install_twisted_reactor()
 
 from magic import Wormhole
-from cross import ensure_storage_perms, get_downloads_dir, open_dir
+from cross import (
+    ensure_storage_perms, get_downloads_dir, intent_hander, open_dir
+)
 
 
 class ErrorPopup(Popup):
@@ -58,7 +60,9 @@ class SendScreen(Screen):
 
     def on_pre_enter(self):
         """
-        Called just before the user enters this screen.
+        Reset the labels and buttons and init a magic wormhole instance.
+
+        This method is called just before the user enters this screen.
         """
         self.send_button_disabled = True
         self.send_button_text = 'waiting for code'
@@ -82,48 +86,61 @@ class SendScreen(Screen):
         deferred = self.wormhole.generate_code()
         deferred.addCallbacks(update_code, ErrorPopup.show)
 
-    def open_file_chooser(self):
+    def set_file(self, path):
         """
-        Called when the user releases the choose file button.
-        """
-        def update_path(selection):
-            if selection:
-                try:
-                    path = os.path.normpath(selection[0])
-                    assert os.path.exists(path) and os.path.isfile(path)
-                except:
-                    ErrorPopup.show((
-                        'There is something wrong about the file you chose. '
-                        'One possible reason is an issue with some Androids '
-                        'where a file cannot be directly selected from the '
-                        '"Downloads" section and instead you have to reach it '
-                        'some other way, e.g. "Phone" -> "Downloads".'
-                    ))
-                else:
-                    self.file_path = path
-                    self.file_name = os.path.basename(self.file_path)
-                    return
+        Set the file to be sent down the wormhole.
 
+        This method is called when the the user selects the file to send using
+        the file chooser. It is also called directly by the App instance when
+        the app has been started or resumed via a send file intent on Android.
+        """
+        try:
+            path = os.path.normpath(path)
+            assert os.path.exists(path) and os.path.isfile(path)
+        except:
+            ErrorPopup.show((
+                'There is something wrong about the file you chose. '
+                'One possible reason is an issue with some Androids '
+                'where a file cannot be directly selected from the '
+                '"Downloads" section and instead you have to reach it '
+                'some other way, e.g. "Phone" -> "Downloads".'
+            ))
             self.file_path = None
             self.file_name = '…'
+        else:
+            self.file_path = path
+            self.file_name = os.path.basename(self.file_path)
+
+    def open_file_chooser(self):
+        """
+        Open a file chooser so that the user can select a file to send down the
+        wormhole. On Android, this could be preceded by asking for permissions.
+
+        This method is called when the user releases the "choose file" button.
+        """
+        def handle_selection(selection):
+            if selection:
+                self.set_file(selection[0])
 
         def show_error():
-            ErrorPopup.show(
+            ErrorPopup.show((
                 'You cannot send a file if the app cannot access it.'
-            )
+            ))
 
         @ensure_storage_perms(show_error)
         def open_file_chooser():
             filechooser.open_file(
-                title='choose a file to send',
-                on_selection=update_path
+                title='Choose a file to send',
+                on_selection=handle_selection
             )
 
         open_file_chooser()
 
     def send(self):
         """
-        Called when the user releases the send button.
+        Send the selected file down the wormhole.
+
+        This method is called when the user releases the send button.
         """
         if not self.file_path:
             return ErrorPopup.show('Please choose a file to send.')
@@ -148,7 +165,9 @@ class SendScreen(Screen):
 
     def on_leave(self):
         """
-        Called when the user leaves this screen.
+        Close the magic wormhole instance, if this is still open.
+
+        This method is called when the user leaves this screen.
         """
         self.wormhole.close()
 
@@ -230,9 +249,9 @@ class ReceiveScreen(Screen):
         file_path = os.path.join(self.downloads_dir, self.file_name)
 
         def show_error():
-            ErrorPopup.show(
+            ErrorPopup.show((
                 'You cannot receive a file if the app cannot write it.'
-            )
+            ))
 
         @ensure_storage_perms(show_error)
         def accept_offer():
@@ -297,6 +316,31 @@ class WormholeApp(App):
                 return True
 
         return False
+
+    def on_start(self):
+        """
+        Called when the app first starts running, after self.build().
+
+        If on Android, check whether the app activity has been started via an
+        intent to send a file, and if yes, set the screen accordingly.
+        """
+        try:
+            file_path = intent_hander.pop()
+        except ValueError as error:
+            ErrorPopup.show(error)
+
+        if file_path is not None:
+            self.screen_manager.current = 'send_screen'
+            self.screen_manager.current_screen.set_file(file_path)
+
+    def on_resume(self):
+        """
+        Called when the app comes back to the foreground.
+
+        As it is the case with on_start, check if on Android the app has been
+        started via an intent and set the screen accordingly.
+        """
+        self.on_start()
 
 
 if __name__ == '__main__':

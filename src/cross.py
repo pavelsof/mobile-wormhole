@@ -4,11 +4,36 @@ from kivy.utils import platform as PLATFORM
 
 
 if PLATFORM == 'android':
+    import android.activity
     from android import mActivity
     from android.permissions import Permission
     from android.permissions import check_permission, request_permissions
     from android.storage import primary_external_storage_path
     from jnius import autoclass, cast
+    from plyer.platforms.android.filechooser import AndroidFileChooser
+
+    String = autoclass('java.lang.String')
+
+    Intent = autoclass('android.content.Intent')
+    Uri = autoclass('android.net.Uri')
+    Environment = autoclass('android.os.Environment')
+    Document = autoclass('android.provider.DocumentsContract$Document')
+
+    class AndroidUriResolver(AndroidFileChooser):
+        """
+        Leverage Plyer's file chooser for resolving Android URIs.
+        """
+
+        def __init__(self):
+            pass
+
+        def resolve(self, uri):
+            return self._resolve_uri(uri)
+
+
+"""
+permissions
+"""
 
 
 def ensure_storage_perms(fallback_func):
@@ -43,12 +68,16 @@ def ensure_storage_perms(fallback_func):
     return outer_wrapper
 
 
+"""
+directories
+"""
+
+
 def get_downloads_dir():
     """
     Return the path to the user's downloads dir.
     """
     if PLATFORM == 'android':
-        Environment = autoclass('android.os.Environment')
         return os.path.join(
             primary_external_storage_path(),
             Environment.DIRECTORY_DOWNLOADS
@@ -62,16 +91,82 @@ def open_dir(path):
     Open the specified directory.
     """
     if PLATFORM == 'android':
-        AndroidString = autoclass('java.lang.String')
-        Document = autoclass('android.provider.DocumentsContract$Document')
-        Intent = autoclass('android.content.Intent')
-        Uri = autoclass('android.net.Uri')
-
         intent = Intent()
         intent.setAction(Intent.ACTION_VIEW)
         intent.setDataAndType(Uri.parse(path), Document.MIME_TYPE_DIR)
 
-        title = cast('java.lang.CharSequence', AndroidString('Open dir with'))
+        title = cast('java.lang.CharSequence', String('Open dir with'))
         mActivity.startActivity(Intent.createChooser(intent, title))
+
     else:
         pass
+
+
+"""
+handling intents
+"""
+
+
+class IntentHandler:
+
+    def __init__(self):
+        """
+        On Android, set the handler listening for incoming ACTION_SEND intents,
+        including the intent that has launched the current activity.
+
+        On other platforms, do nothing.
+        """
+        self.data = None
+        self.error = None
+
+        if PLATFORM == 'android':
+            self.uri_resolver = AndroidUriResolver()
+            self.handle_android_intent(mActivity.getIntent())
+            android.activity.bind(on_new_intent=self.handle_android_intent)
+
+    def handle_android_intent(self, intent):
+        """
+        Handle incoming ACTION_SEND intents on Android.
+        """
+        if intent.getAction() != 'android.intent.action.SEND':
+            return
+
+        self.data = None
+        self.error = None
+
+        try:
+            if intent.getData():
+                uri = intent.getData()
+            else:
+                clipData = intent.getClipData()
+
+                try:
+                    assert clipData is not None
+                    assert clipData.getItemCount()
+                except AssertionError:
+                    raise ValueError((
+                        'The intent has neither getData() nor getClipData().'
+                    ))
+
+                uri = clipData.getItemAt(0).getUri()
+        except ValueError as error:
+            self.error = str(error)
+        else:
+            self.data = self.uri_resolver.resolve(uri)
+
+    def pop(self):
+        """
+        If there is a file path in our improvised single-slot buffer, pop it.
+        If there is an error instead, raise it. Otherwise return None.
+        """
+        if self.error:
+            error = str(self.error)
+            self.error = None
+            raise ValueError(error)
+        else:
+            data = self.data
+            self.data = None
+            return data
+
+
+intent_hander = IntentHandler()
