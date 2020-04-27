@@ -1,5 +1,6 @@
-import os.path
+import os
 
+import humanize
 from kivy.app import App
 from kivy.core.clipboard import Clipboard
 from kivy.core.window import Window
@@ -107,9 +108,13 @@ class SendScreen(Screen):
             ))
             self.file_path = None
             self.file_name = '…'
+            self.file_size = '…'
         else:
             self.file_path = path
             self.file_name = os.path.basename(self.file_path)
+            self.file_size = humanize.naturalsize(
+                os.stat(self.file_path).st_size
+            )
 
     def open_file_chooser(self):
         """
@@ -235,7 +240,7 @@ class ReceiveScreen(Screen):
 
         def show_offer(offer):
             self.file_name = str(offer['filename'])
-            self.file_size = str(offer['filesize'])
+            self.file_size = humanize.naturalsize(offer['filesize'])
 
             self.accept_button_disabled = False
             self.accept_button_text = 'accept'

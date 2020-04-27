@@ -8,7 +8,7 @@ This is a work-in-progress mobile client for the [magic wormhole][magic-wormhole
 
 Some other things that would be nice to work:
 
-- [ ] Auto-completion when entering the code in the Receive screen.
+- [ ] Auto-completion when entering a code in the Receive screen.
 - [ ] Provide a way for the user to directly open the freshly received file (as opposed to just opening the downloads directory).
 - [ ] Tor support.
 - [ ] Build the app for iOS.
@@ -20,7 +20,7 @@ In order to leverage the original [magic wormhole][magic-wormhole] package and a
 
 ```sh
 # create a virtual environment
-# it should work with 3.7, have not tried with others
+# both 3.6 and 3.7 should do, have not tried 3.8 yet
 python3 -m venv venv
 source venv/bin/activate
 
