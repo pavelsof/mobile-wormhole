@@ -333,10 +333,10 @@ class WormholeApp(App):
             file_path = intent_hander.pop()
         except ValueError as error:
             ErrorPopup.show(error)
-
-        if file_path is not None:
-            self.screen_manager.current = 'send_screen'
-            self.screen_manager.current_screen.set_file(file_path)
+        else:
+            if file_path is not None:
+                self.screen_manager.current = 'send_screen'
+                self.screen_manager.current_screen.set_file(file_path)
 
     def on_resume(self):
         """

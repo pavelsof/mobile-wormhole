@@ -137,22 +137,22 @@ class IntentHandler:
         try:
             if intent.getData():
                 uri = intent.getData()
+
             else:
                 clipData = intent.getClipData()
 
-                try:
-                    assert clipData is not None
-                    assert clipData.getItemCount()
-                except AssertionError:
-                    raise ValueError((
-                        'The intent has neither getData() nor getClipData().'
-                    ))
+                assert clipData is not None
+                assert clipData.getItemCount()
 
                 uri = clipData.getItemAt(0).getUri()
-        except ValueError as error:
-            self.error = str(error)
-        else:
+
             self.data = self.uri_resolver.resolve(uri)
+        except (AttributeError, AssertionError):
+            self.error = (
+                'Your share target cannot be recognised as a file. '
+                'If it is indeed one, '
+                'please try selecting it via the file chooser instead.'
+            )
 
     def pop(self):
         """
