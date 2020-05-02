@@ -4,11 +4,11 @@ This is a work-in-progress mobile client for the [magic wormhole][magic-wormhole
 
 - Sending files. The app can obtain a code, exchange keys with the other party, allow the user to pick a file to send down the wormhole, and then actually transfer the file.
 - Receiving files. The user can enter a code, view a file offer to confirm or reject, and indeed receive a file. This will be saved in the downloads directory.
-- Handling of Android's `ACTION_SEND` intent. The user can share a file via the app, essentially pre-filling the file in the Send screen.
+- Handling of Android's `ACTION_SEND` intent. The user can share a file via the app, essentially pre-selecting the file in the send screen.
 
 [<img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png"
       alt="Download from Google Play"
-      height="80">](https://play.google.com/store/apps/details?id=com.pavelsof.wormhole)
+      height="60">](https://play.google.com/store/apps/details?id=com.pavelsof.wormhole)
 
 
 ## setup
