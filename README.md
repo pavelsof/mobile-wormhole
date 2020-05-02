@@ -2,16 +2,13 @@
 
 This is a work-in-progress mobile client for the [magic wormhole][magic-wormhole] protocol. What already works:
 
-- [x] Sending files. The app can obtain a code, exchange keys with the other party, allow the user to pick a file to send down the wormhole, and then actually transfer the file.
-- [x] Receiving files. The user can enter a code, view a file offer to confirm or reject, and indeed receive a file. This will be saved in the downloads directory.
-- [x] Handling of Android's `ACTION_SEND` intent. The user can "share" a file via the app, essentially pre-filling the file in the Send screen.
+- Sending files. The app can obtain a code, exchange keys with the other party, allow the user to pick a file to send down the wormhole, and then actually transfer the file.
+- Receiving files. The user can enter a code, view a file offer to confirm or reject, and indeed receive a file. This will be saved in the downloads directory.
+- Handling of Android's `ACTION_SEND` intent. The user can share a file via the app, essentially pre-filling the file in the Send screen.
 
-Some other things that would be nice to work:
-
-- [ ] Auto-completion when entering a code in the Receive screen.
-- [ ] Provide a way for the user to directly open the freshly received file (as opposed to just opening the downloads directory).
-- [ ] Tor support.
-- [ ] Build the app for iOS.
+[<img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png"
+      alt="Download from Google Play"
+      height="80">](https://play.google.com/store/apps/details?id=com.pavelsof.wormhole)
 
 
 ## setup
