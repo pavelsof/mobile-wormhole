@@ -16,7 +16,7 @@ install_twisted_reactor()
 
 from magic import Wormhole
 from cross import (
-    ensure_storage_perms, get_downloads_dir, intent_hander, open_dir
+    ensure_storage_perms, get_downloads_dir, intent_hander, open_file
 )
 
 
@@ -268,17 +268,29 @@ class ReceiveScreen(Screen):
 
         def show_done(hex_digest):
             self.accept_button_disabled = False
-            self.accept_button_func = self.open_dir
-            self.accept_button_text = 'open dir'
+            self.accept_button_func = self.open_file
+            self.accept_button_text = 'open file'
 
         accept_offer()
 
-    def open_dir(self):
+    def open_file(self):
         """
         Called when the user presses the accept button after the file transfer
         has been completed.
         """
-        open_dir(self.downloads_dir)
+        file_path = os.path.join(self.downloads_dir, self.file_name)
+
+        def show_error():
+            ErrorPopup.show('Cannot open {}'.format(file_path))
+
+        @ensure_storage_perms(show_error)
+        def do():
+            open_file(file_path)
+
+        if os.path.exists(file_path):
+            do()
+        else:
+            show_error()
 
     def on_leave(self):
         """

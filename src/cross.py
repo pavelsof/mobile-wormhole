@@ -1,3 +1,4 @@
+import mimetypes
 import os
 
 from kivy.utils import platform as PLATFORM
@@ -9,15 +10,14 @@ if PLATFORM == 'android':
     from android.permissions import Permission
     from android.permissions import check_permission, request_permissions
     from android.storage import primary_external_storage_path
-    from jnius import autoclass, cast
+    from jnius import autoclass
     from plyer.platforms.android.filechooser import AndroidFileChooser
 
-    String = autoclass('java.lang.String')
+    File = autoclass('java.io.File')
 
     Intent = autoclass('android.content.Intent')
-    Uri = autoclass('android.net.Uri')
     Environment = autoclass('android.os.Environment')
-    Document = autoclass('android.provider.DocumentsContract$Document')
+    FileProvider = autoclass('android.support.v4.content.FileProvider')
 
     class AndroidUriResolver(AndroidFileChooser):
         """
@@ -86,17 +86,24 @@ def get_downloads_dir():
         return os.getcwd()
 
 
-def open_dir(path):
+def open_file(path):
     """
-    Open the specified directory.
+    Open the specified file.
     """
+    mime_type, _ = mimetypes.guess_type(path)
+
     if PLATFORM == 'android':
+        uri = FileProvider.getUriForFile(
+            mActivity, 'com.pavelsof.wormhole.fileprovider', File(path)
+        )
+
         intent = Intent()
         intent.setAction(Intent.ACTION_VIEW)
-        intent.setDataAndType(Uri.parse(path), Document.MIME_TYPE_DIR)
+        intent.setDataAndType(uri, mime_type)
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-        title = cast('java.lang.CharSequence', String('Open dir with'))
-        mActivity.startActivity(Intent.createChooser(intent, title))
+        mActivity.startActivity(intent)
 
     else:
         pass
