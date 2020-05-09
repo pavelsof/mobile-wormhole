@@ -89,6 +89,22 @@ def get_downloads_dir():
 def open_file(path):
     """
     Open the specified file.
+
+    On Android, for the ACTION_VIEW to work, the Uri supplied to the Intent has
+    to be sanctioned by the FileProvider (i.e. Uri.fromFile does not work), so:
+
+    - The legacy android.support.v4.content.FileProvider has to be added to the
+      app because AndroidX is not yet supported by Kivy [1]. In practice, this
+      means adding a line to the build.gradle file.
+    - The FileProvider requires a bit of boilerplate XML in the AndroidManifest
+      and one other file [2].
+
+    As neither of the two seems to be currently configurable via Buildozer, the
+    latter is set to use a dedicated fork and branch of python-for-android [3].
+
+    [1]: https://github.com/kivy/python-for-android/issues/2020
+    [2]: https://developer.android.com/reference/android/support/v4/content/FileProvider
+    [3]: https://github.com/pavelsof/python-for-android/tree/with-fileprovider
     """
     mime_type, _ = mimetypes.guess_type(path)
 
@@ -104,9 +120,6 @@ def open_file(path):
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
         mActivity.startActivity(intent)
-
-    else:
-        pass
 
 
 """
