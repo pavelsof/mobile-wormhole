@@ -95,11 +95,11 @@ def open_file(path):
 
     - The legacy android.support.v4.content.FileProvider has to be added to the
       app because AndroidX is not yet supported by Kivy [1]. In practice, this
-      means adding a line to the build.gradle file.
+      means adding a gradle dependency in buildozer.spec.
     - The FileProvider requires a bit of boilerplate XML in the AndroidManifest
       and one other file [2].
 
-    As neither of the two seems to be currently configurable via Buildozer, the
+    As the second does not seem to be currently configurable via Buildozer, the
     latter is set to use a dedicated fork and branch of python-for-android [3].
 
     [1]: https://github.com/kivy/python-for-android/issues/2020
