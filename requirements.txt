@@ -4,12 +4,12 @@
 #
 #    pip-compile
 #
-appdirs==1.4.3            # via virtualenv
+appdirs==1.4.4            # via virtualenv
 attrs==19.3.0             # via autobahn, automat, magic-wormhole, pytest, service-identity, twisted
 autobahn[twisted]==20.4.1  # via magic-wormhole
 automat==20.2.0           # via magic-wormhole, twisted, txtorcon
 backcall==0.1.0           # via ipython
-buildozer==1.0            # via -r requirements.in
+git+https://github.com/pavelsof/buildozer@c4b4fdf0c803418a23efee9852702e67414617c5  # via -r requirements.in
 certifi==2019.11.28       # via requests
 cffi==1.14.0              # via cryptography, pynacl
 chardet==3.0.4            # via requests
@@ -59,7 +59,7 @@ pytest-twisted==1.12      # via -r requirements.in
 pytest==5.4.1             # via -r requirements.in, pytest-twisted
 requests==2.23.0          # via kivy-garden
 service-identity==18.1.0  # via twisted
-sh==1.12.14               # via buildozer
+sh==1.13.1                # via buildozer
 six==1.14.0               # via automat, cryptography, magic-wormhole, packaging, pip-tools, pynacl, pyopenssl, traitlets, virtualenv
 spake2==0.8               # via magic-wormhole
 tqdm==4.45.0              # via magic-wormhole
@@ -68,7 +68,7 @@ twisted[tls]==20.3.0      # via autobahn, magic-wormhole, txtorcon
 txaio==20.4.1             # via autobahn
 txtorcon==20.0.0          # via magic-wormhole
 urllib3==1.25.8           # via requests
-virtualenv==20.0.16       # via buildozer
+virtualenv==20.0.21       # via buildozer
 wcwidth==0.1.9            # via prompt-toolkit, pytest
 zipp==3.1.0               # via importlib-metadata
 zope.interface==5.0.2     # via autobahn, twisted, txtorcon

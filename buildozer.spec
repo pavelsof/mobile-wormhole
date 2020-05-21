@@ -186,10 +186,17 @@ android.gradle_dependencies = com.android.support:support-v4:26.1.0
 #android.ouya.icon.filename = %(source.dir)s/data/ouya_icon.png
 
 # (str) XML file to include as an intent filters in <activity> tag
-android.manifest.intent_filters = intent_filters.xml
+android.manifest.intent_filters = misc/intent_filters.xml
+
+# (str) XML file to include at the end of the <application> tag
+android.manifest.content_providers = misc/content_providers.xml
 
 # (str) launchMode to set for the main activity
 #android.manifest.launch_mode = standard
+
+# (list) XML files to add to the src/main/res/xml subdirectory of the build
+# such files are usually referenced in the manifest, e.g. to specifiy file paths for a content provider
+android.add_xml_resources = misc/file_paths.xml
 
 # (list) Android additional libraries to copy into libs/armeabi
 #android.add_libs_armeabi = libs/android/*.so
@@ -230,7 +237,7 @@ android.arch = armeabi-v7a
 p4a.fork = pavelsof
 
 # (str) python-for-android branch to use, defaults to master
-p4a.branch = with-fileprovider
+p4a.branch = content-providers
 
 # (str) python-for-android git clone directory (if empty, it will be automatically cloned from github)
 #p4a.source_dir =
