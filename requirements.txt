@@ -15,7 +15,7 @@ cffi==1.14.0              # via cryptography, pynacl
 chardet==3.0.4            # via requests
 click==7.1.1              # via magic-wormhole, pip-tools
 constantly==15.1.0        # via twisted
-cryptography==2.9         # via autobahn, pyopenssl, service-identity, txtorcon
+cryptography==3.2         # via autobahn, pyopenssl, service-identity, txtorcon
 cython==0.29.16           # via -r requirements.in
 decorator==4.4.2          # via ipython, pytest-twisted, traitlets
 distlib==0.3.0            # via virtualenv
