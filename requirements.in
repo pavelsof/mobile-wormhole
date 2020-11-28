@@ -1,18 +1,18 @@
 # what goes in the app
 kivy[base]==2.0.0rc4
-magic-wormhole==0.11.2
-plyer==1.4.3
+magic-wormhole==0.12.0
+plyer==2.0.0
 
 # what builds the app
 git+https://github.com/pavelsof/buildozer@c4b4fdf0c803418a23efee9852702e67414617c5
-cython==0.29.16
+cython==0.29.21
 
 # unit tests
-pytest==5.4.3
-pytest-twisted==1.12
+pytest==6.1.2
+pytest-twisted==1.13.2
 
 # other tools
-ipython==7.15.0
+ipython==7.19.0
 pip-tools==5.4.0
 pipdeptree==1.0.0
 pyflakes==2.2.0
