@@ -17,12 +17,13 @@ In order to leverage the original [magic wormhole][magic-wormhole] package and a
 
 ```sh
 # create a virtual environment
-# both 3.6 and 3.7 should do, have not tried 3.8 yet
+# version 3.8 should work
 python3 -m venv venv
 source venv/bin/activate
 
 # install the dependencies
 # pip-sync is also fine
+pip install --upgrade pip
 pip install -r requirements.txt
 
 # run the (too) few unit tests

@@ -1,5 +1,5 @@
 # what goes in the app
-kivy==1.11.1
+kivy[base]==2.0.0rc4
 magic-wormhole==0.11.2
 plyer==1.4.3
 
@@ -13,6 +13,6 @@ pytest-twisted==1.12
 
 # other tools
 ipython==7.15.0
-pip-tools==5.2.1
+pip-tools==5.4.0
 pipdeptree==1.0.0
 pyflakes==2.2.0
