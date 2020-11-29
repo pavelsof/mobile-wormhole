@@ -14,6 +14,7 @@ from twisted.python.failure import Failure
 
 install_twisted_reactor()
 
+from config import ConfigMixin
 from magic import Wormhole
 from cross import (
     ensure_storage_perms, get_downloads_dir, intent_hander, open_file
@@ -302,7 +303,7 @@ class ReceiveScreen(Screen):
             pass
 
 
-class WormholeApp(App):
+class WormholeApp(ConfigMixin, App):
 
     def build(self):
         """

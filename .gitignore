@@ -7,6 +7,9 @@
 # buildozer output dir
 /bin/*
 
+# config file
+/src/wormhole.ini
+
 # python temps
 *.pyc
 

@@ -67,6 +67,11 @@
                 text: 'receive'
                 on_release: root.manager.current = 'receive_screen'
 
+        AnchorLayout:
+            Button:
+                text: 'config'
+                on_release: app.open_settings()
+
 
 <SendScreen>:
     name: 'send_screen'
@@ -171,3 +176,59 @@
                     disabled: root.accept_button_disabled
                     text: root.accept_button_text
                     on_release: root.accept_button_func()
+
+
+<ConfigScreen>:
+    name: 'config_screen'
+
+    BoxLayout:
+        orientation: 'vertical'
+
+        BoxLayout:
+            orientation: 'vertical'
+
+            AnchorLayout:
+                Label:
+                    text: 'rendezvous relay'
+
+            AnchorLayout:
+                TextInput:
+                    id: rendezvous_relay
+                    multiline: False
+                    size_hint: 0.8, None
+
+            AnchorLayout:
+                Button:
+                    text: 'reset'
+                    on_release: root.reset_field('rendezvous_relay')
+
+        BoxLayout:
+            orientation: 'vertical'
+
+            AnchorLayout:
+                Label:
+                    text: 'transit relay'
+
+            AnchorLayout:
+                TextInput:
+                    id: transit_relay
+                    multiline: False
+                    size_hint: 0.8, None
+
+            AnchorLayout:
+                Button:
+                    text: 'reset'
+                    on_release: root.reset_field('transit_relay')
+
+        BoxLayout:
+            orientation: 'horizontal'
+
+            AnchorLayout:
+                Button:
+                    text: 'cancel'
+                    on_release: root.manager.current = 'home_screen'
+
+            AnchorLayout:
+                Button:
+                    text: 'save'
+                    on_release: root.update_config(); root.manager.current = 'home_screen'
