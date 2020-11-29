@@ -14,7 +14,7 @@ from twisted.python.failure import Failure
 
 install_twisted_reactor()
 
-from config import ConfigMixin
+from config import ConfigMixin, get_config
 from magic import Wormhole
 from cross import (
     ensure_storage_perms, get_downloads_dir, intent_hander, open_file
@@ -76,7 +76,10 @@ class SendScreen(Screen):
         self.file_name = '…'
         self.file_size = '…'
 
-        self.wormhole = Wormhole()
+        try:
+            self.wormhole = Wormhole(**get_config())
+        except Exception as error:
+            return ErrorPopup.show(error)
 
         def update_code(code):
             self.has_code = True
@@ -171,11 +174,14 @@ class SendScreen(Screen):
 
     def on_leave(self):
         """
-        Close the magic wormhole instance, if this is still open.
+        Close the magic wormhole instance, if this exists and is still open.
 
         This method is called when the user leaves this screen.
         """
-        self.wormhole.close()
+        try:
+            self.wormhole.close()
+        except:
+            pass  # opening the wormhole failed altogether
 
 
 class ReceiveScreen(Screen):
@@ -220,7 +226,10 @@ class ReceiveScreen(Screen):
             self.connect_button_disabled = True
             self.connect_button_text = 'connecting'
 
-            self.wormhole = Wormhole()
+            try:
+                self.wormhole = Wormhole(**get_config())
+            except Exception as error:
+                return ErrorPopup.show(error)
 
             deferred = self.wormhole.connect(code)
             deferred.addCallbacks(exchange_keys, ErrorPopup.show)

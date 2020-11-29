@@ -12,6 +12,14 @@ from wormhole.cli.public_relay import RENDEZVOUS_RELAY, TRANSIT_RELAY
 from wormhole.transit import TransitReceiver, TransitSender
 
 
+class ConnectionError(Exception):
+    """
+    Raised when our client cannot establish connection to the rendezvous or the
+    transit relay servers.
+    """
+    verbose_name = 'Connection error'
+
+
 class HumanError(Exception):
     """
     Raised when one of the humans at either end of the wormhole does something
@@ -78,7 +86,14 @@ class Wormhole:
         self.rendezvous_relay = rendezvous_relay
         self.transit_relay = transit_relay
 
-        self.wormhole = create(self.app_id, self.rendezvous_relay, reactor)
+        try:
+            self.wormhole = create(self.app_id, self.rendezvous_relay, reactor)
+        except Exception:
+            raise ConnectionError((
+                'Cannot connect to the rendezvous server. '
+                'In case you are not using the default server, '
+                'you can double-check the URL in the config.'
+            ))
 
         self.offer = None
         self.transit = None
@@ -98,11 +113,13 @@ class Wormhole:
 
         try:
             code = yield deferred
-        except (wormhole.errors.ServerConnectionError, TimeoutError):
-            raise Timeout((
-                'The relay server cannot be reached. '
+        except wormhole.errors.ServerConnectionError:
+            raise ConnectionError((
+                'The rendezvous server cannot be reached. '
                 'Please double-check your Internet connection.'
             ))
+        except TimeoutError:
+            raise Timeout('The rendezvous server timed out.')
 
         return returnValue(code)
 
@@ -122,10 +139,7 @@ class Wormhole:
         try:
             code = yield deferred
         except TimeoutError:
-            raise Timeout((
-                'The relay server cannot be reached. '
-                'Please double-check your Internet connection.'
-            ))
+            raise Timeout('The rendezvous server timed out.')
 
         return returnValue(code)
 
@@ -198,8 +212,16 @@ class Wormhole:
         assert self.transit is None and os.path.exists(file_path)
 
         self.transit = TransitSender(self.transit_relay)
-        our_hints = yield self.transit.get_connection_hints()
-        our_abilities = self.transit.get_connection_abilities()
+
+        try:
+            our_hints = yield self.transit.get_connection_hints()
+            our_abilities = self.transit.get_connection_abilities()
+        except Exception:
+            raise ConnectionError((
+                'Cannot connect to the transit relay. '
+                'In case you are not using the default server, '
+                'you can double-check the URL in the config.'
+            ))
 
         self.send_json({
             'transit': {
@@ -309,8 +331,16 @@ class Wormhole:
                 self.transit.add_connection_hints(
                     message['transit']['hints-v1']
                 )
-                our_hints = yield self.transit.get_connection_hints()
-                our_abilities = self.transit.get_connection_abilities()
+
+                try:
+                    our_hints = yield self.transit.get_connection_hints()
+                    our_abilities = self.transit.get_connection_abilities()
+                except Exception:
+                    raise ConnectionError((
+                        'Cannot connect to the transit relay. '
+                        'In case you are not using the default server, '
+                        'you can double-check the URL in the config.'
+                    ))
 
                 self.send_json({
                     'transit': {

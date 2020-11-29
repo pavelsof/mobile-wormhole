@@ -1,3 +1,4 @@
+from kivy.app import App
 from kivy.uix.screenmanager import Screen
 from wormhole.cli.public_relay import RENDEZVOUS_RELAY, TRANSIT_RELAY
 
@@ -83,3 +84,14 @@ class ConfigMixin:
             self.screen_manager.add_widget(settings)
 
         self.screen_manager.current = 'config_screen'
+
+
+def get_config():
+    """
+    Return a dict mapping all config keys to their stored values.
+    """
+    app = App.get_running_app()
+    return {
+        field_name: app.config.get(SECTION_NAME, field_name)
+        for field_name in FIELD_NAMES
+    }
