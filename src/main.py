@@ -202,6 +202,7 @@ class ReceiveScreen(Screen):
 
     file_name = StringProperty('…')
     file_size = StringProperty('…')
+    transferred = StringProperty('…')
 
     def on_pre_enter(self):
         """
@@ -218,6 +219,9 @@ class ReceiveScreen(Screen):
 
         self.file_name = '…'
         self.file_size = '…'
+
+        self.bytes_transferred = 0
+        self.transferred = '…'
 
         self.ids.code_input.text = ''
 
@@ -281,8 +285,12 @@ class ReceiveScreen(Screen):
             self.accept_button_disabled = True
             self.accept_button_text = 'receiving'
 
-            deferred = self.wormhole.accept_offer(file_path)
+            deferred = self.wormhole.accept_offer(file_path, on_chunk)
             deferred.addCallbacks(show_done, ErrorPopup.show)
+
+        def on_chunk(chunk):
+            self.bytes_transferred += len(chunk)
+            self.transferred = humanize.naturalsize(self.bytes_transferred)
 
         def show_done(hex_digest):
             self.accept_button_disabled = False

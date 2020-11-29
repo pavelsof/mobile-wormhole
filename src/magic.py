@@ -355,7 +355,7 @@ class Wormhole:
                 return returnValue(self.offer['file'])
 
     @inlineCallbacks
-    def accept_offer(self, file_path):
+    def accept_offer(self, file_path, on_chunk):
         """
         Download the file sent by the other end and write it to the specified
         location. Assume that the transit has been already established.
@@ -373,9 +373,13 @@ class Wormhole:
         record_pipe = yield self.transit.connect()
         hasher = hashlib.sha256()
 
+        def callback(data):
+            hasher.update(data)
+            on_chunk(data)
+
         with open(file_path, 'wb') as f:
             received = yield record_pipe.writeToFile(
-                f, size, progress=None, hasher=hasher.update
+                f, size, progress=None, hasher=callback
             )
 
             if received != size:
