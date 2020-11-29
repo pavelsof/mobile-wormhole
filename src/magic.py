@@ -198,7 +198,7 @@ class Wormhole:
         return returnValue(message)
 
     @inlineCallbacks
-    def send_file(self, file_path):
+    def send_file(self, file_path, on_chunk):
         """
         Send a file down the wormhole. As per the file-transfer protocol this
         involves the following steps:
@@ -263,11 +263,11 @@ class Wormhole:
                 except (AssertionError, KeyError):
                     raise HumanError('The other side declined the file.')
                 else:
-                    hex_digest = yield self.transfer_file(file_path)
+                    hex_digest = yield self.transfer_file(file_path, on_chunk)
                     return returnValue(hex_digest)
 
     @inlineCallbacks
-    def transfer_file(self, file_path):
+    def transfer_file(self, file_path, on_chunk):
         """
         Send a file via the transit. Assume that the latter has been already
         established. If the other end provides a hash when done, check it.
@@ -277,13 +277,14 @@ class Wormhole:
         record_pipe = yield self.transit.connect()
         hasher = hashlib.sha256()
 
-        def func(data):
+        def transform(data):
             hasher.update(data)
+            on_chunk(data)
             return data
 
         with open(file_path, 'rb') as f:
             file_sender = FileSender()
-            yield file_sender.beginFileTransfer(f, record_pipe, func)
+            yield file_sender.beginFileTransfer(f, record_pipe, transform)
 
         ack_record = yield record_pipe.receive_record()
         ack_record = json.loads(str(ack_record, 'utf-8'))

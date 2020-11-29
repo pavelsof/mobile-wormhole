@@ -59,6 +59,7 @@ class SendScreen(Screen):
 
     file_name = StringProperty('…')
     file_size = StringProperty('…')
+    transferred = StringProperty('…')
 
     def on_pre_enter(self):
         """
@@ -75,6 +76,9 @@ class SendScreen(Screen):
         self.file_path = None
         self.file_name = '…'
         self.file_size = '…'
+
+        self.bytes_transferred = 0
+        self.transferred = '…'
 
         try:
             self.wormhole = Wormhole(**get_config())
@@ -163,8 +167,12 @@ class SendScreen(Screen):
         def send_file(verifier):
             self.send_button_disabled = True
             self.send_button_text = 'sending file'
-            deferred = self.wormhole.send_file(self.file_path)
+            deferred = self.wormhole.send_file(self.file_path, on_chunk)
             deferred.addCallbacks(show_done, ErrorPopup.show)
+
+        def on_chunk(chunk):
+            self.bytes_transferred += len(chunk)
+            self.transferred = humanize.naturalsize(self.bytes_transferred)
 
         def show_done(hex_digest):
             self.send_button_disabled = True
