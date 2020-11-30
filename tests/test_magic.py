@@ -155,7 +155,7 @@ def test_send_file_error(upstream, file_path):
     wormhole = Wormhole()
 
     with pytest.raises(SuspiciousOperation) as exc_info:
-        yield wormhole.send_file(file_path)
+        yield wormhole.send_file(file_path, lambda _: None)
 
     assert str(exc_info.value) == '!'
     assert upstream.close.called
