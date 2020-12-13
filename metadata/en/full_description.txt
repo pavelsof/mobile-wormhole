@@ -1,0 +1,23 @@
+This is an Android client for the Magic Wormhole protocol [1]. You can use it to exchange files between your phone and another Magic Wormhole client, including the original command-line client.
+
+How to send files
+
+* From the main screen, tap the "send" button. Then use the "choose file" button to pick the file that you want to send.
+* Alternatively, open the file that you want to send and tap the share icon: Wormhole should be listed among the apps you can use to share the file.
+* Either way, the app will have generated a code, a random number followed by two random words. The person to whom you want to send the file will have to enter this code in their Magic Wormhole client. The code is also copied to the clipboard for convenience.
+* Tap the "send" button. When the user at the other end of the wormhole enters the code and confirms, the file will start transferring.
+* The "send" button will change to "done" when the transfer is complete.
+
+How to receive files
+
+* From the main screen, tap the "receive" button.
+* Enter the code that the sender has provided you with and tap the "connect" button.
+* You will see the incoming file's name and size. If all looks good, tap the "receive" button to start the file transfer.
+* When the file is downloaded from the wormhole, the "receive" button will change to an "open dir" button.
+
+The app is still in beta and there is still a lot to be desired. However, the basic functionality of sending and receiving files seems to be there. I find it useful, so someone else might as well.
+
+The code is open sourced under GPLv3. Pull requests are welcome [2].
+
+[1]: https://github.com/warner/magic-wormhole
+[2]: https://github.com/pavelsof/mobile-wormhole
