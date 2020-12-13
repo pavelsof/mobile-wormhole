@@ -1,4 +1,4 @@
-This is an Android client for the Magic Wormhole protocol [1]. You can use it to exchange files between your phone and another Magic Wormhole client, including the original command-line client.
+This is an Android client for the <a href="https://github.com/warner/magic-wormhole">Magic Wormhole</a> protocol. You can use it to exchange files between your phone and another Magic Wormhole client, including the original command-line client.
 
 How to send files
 
@@ -17,7 +17,4 @@ How to receive files
 
 The app is still in beta and there is still a lot to be desired. However, the basic functionality of sending and receiving files seems to be there. I find it useful, so someone else might as well.
 
-The code is open sourced under GPLv3. Pull requests are welcome [2].
-
-[1]: https://github.com/warner/magic-wormhole
-[2]: https://github.com/pavelsof/mobile-wormhole
+The code is <a href="https://github.com/pavelsof/mobile-wormhole">open sourced</a> under GPLv3. Pull requests are welcome.
