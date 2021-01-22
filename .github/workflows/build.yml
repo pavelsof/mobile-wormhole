@@ -2,9 +2,8 @@ name: build
 on: [push, pull_request]
 
 jobs:
-  # Build job. Builds app for Android with Buildozer
   build-android:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@v2
@@ -12,6 +11,7 @@ jobs:
       - uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
         with:
+          workdir: .
           buildozer_version: git+https://github.com/pavelsof/buildozer@c4b4fdf0c803418a23efee9852702e67414617c5
 
       - uses: actions/upload-artifact@v2
