@@ -1,6 +1,6 @@
 # changelog
 
-## 0.2.1 (TBA)
+## 0.2.1 (2021-01-23)
 
 - The app keeps the screen on while in foreground ([#8](https://github.com/pavelsof/mobile-wormhole/issues/8)).
 
