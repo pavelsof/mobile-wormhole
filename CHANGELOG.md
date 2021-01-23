@@ -1,5 +1,10 @@
 # changelog
 
+## 0.2.1 (TBA)
+
+- The app keeps the screen on while in foreground ([#8](https://github.com/pavelsof/mobile-wormhole/issues/8)).
+
+
 ## 0.2.0 (2020-12-12)
 
 - Upgraded to Kivy 2.0.
