@@ -1,4 +1,4 @@
-# wormhole
+# Wormhole
 
 This is a work-in-progress mobile client for the [magic wormhole][magic-wormhole] protocol. What already works:
 
@@ -6,12 +6,14 @@ This is a work-in-progress mobile client for the [magic wormhole][magic-wormhole
 - Receiving files. The user can enter a code, view a file offer to confirm or reject, and indeed receive a file. This will be saved in the downloads directory.
 - Handling of Android's `ACTION_SEND` intent. The user can share a file via the app, essentially pre-selecting the file in the send screen.
 
-[<img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png"
-      alt="Download from Google Play"
-      height="60">](https://play.google.com/store/apps/details?id=com.pavelsof.wormhole)
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
+     alt="Get it on F-Droid"
+     height="80">](https://f-droid.org/packages/com.pavelsof.wormhole/)
+[<img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png"
+     alt="Get it on Google Play"
+     height="80">](https://play.google.com/store/apps/details?id=com.pavelsof.wormhole)
 
-
-## setup
+## Setup
 
 In order to leverage the original [magic wormhole][magic-wormhole] package and also because I was curious whether it will even work, the code is written in Python using [Kivy][kivy] and friends.
 
@@ -39,7 +41,7 @@ buildozer android debug deploy run logcat
 If you also feel adventurous about mobile apps in Python.. pull requests are welcome :)
 
 
-## licence
+## Licence
 
 GPL. You can do what you want with this code as long as you let others do the same.
 
