@@ -13,6 +13,6 @@ pytest-twisted==1.13.2
 
 # other tools
 ipython==7.19.0
-pip-tools==5.4.0
+pip-tools==6.8.0
 pipdeptree==1.0.0
 pyflakes==2.2.0
