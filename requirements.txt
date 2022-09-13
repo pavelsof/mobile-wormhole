@@ -4,9 +4,9 @@
 #
 #    pip-compile
 #
-appdirs==1.4.4
-    # via virtualenv
-attrs==21.2.0
+asttokens==2.0.8
+    # via stack-data
+attrs==22.1.0
     # via
     #   autobahn
     #   automat
@@ -14,7 +14,7 @@ attrs==21.2.0
     #   pytest
     #   service-identity
     #   twisted
-autobahn[twisted]==21.3.1
+autobahn[twisted]==22.7.1
     # via magic-wormhole
 automat==20.2.0
     # via
@@ -27,21 +27,21 @@ build==0.8.0
     # via pip-tools
 buildozer @ git+https://github.com/pavelsof/buildozer@c4b4fdf0c803418a23efee9852702e67414617c5
     # via -r requirements.in
-certifi==2021.5.30
+certifi==2022.6.15.2
     # via requests
-cffi==1.14.5
+cffi==1.15.1
     # via
     #   cryptography
     #   pynacl
-chardet==4.0.0
+charset-normalizer==2.1.1
     # via requests
-click==8.0.1
+click==8.1.3
     # via
     #   magic-wormhole
     #   pip-tools
 constantly==15.1.0
     # via twisted
-cryptography==3.4.7
+cryptography==38.0.1
     # via
     #   autobahn
     #   pyopenssl
@@ -49,29 +49,31 @@ cryptography==3.4.7
     #   txtorcon
 cython==0.29.21
     # via -r requirements.in
-decorator==5.0.9
+decorator==5.1.1
     # via
     #   ipython
     #   pytest-twisted
-distlib==0.3.2
+distlib==0.3.6
     # via virtualenv
-docutils==0.17.1
+docutils==0.19
     # via kivy
-filelock==3.0.12
+executing==1.0.0
+    # via stack-data
+filelock==3.8.0
     # via virtualenv
-greenlet==1.1.0
+greenlet==1.1.3
     # via pytest-twisted
 hkdf==0.0.3
     # via
     #   magic-wormhole
     #   spake2
-humanize==3.7.1
+humanize==4.3.0
     # via magic-wormhole
 hyperlink==21.0.0
     # via
     #   autobahn
     #   twisted
-idna==2.10
+idna==3.3
     # via
     #   hyperlink
     #   requests
@@ -82,23 +84,23 @@ incremental==21.3.0
     #   txtorcon
 iniconfig==1.1.1
     # via pytest
-ipython==7.19.0
+ipython==8.5.0
     # via -r requirements.in
-ipython-genutils==0.2.0
-    # via traitlets
-jedi==0.18.0
+jedi==0.18.1
     # via ipython
 kivy[base]==2.0.0rc4
     # via -r requirements.in
-kivy-garden==0.1.4
+kivy-garden==0.1.5
     # via kivy
 magic-wormhole==0.12.0
     # via -r requirements.in
-packaging==20.9
+matplotlib-inline==0.1.6
+    # via ipython
+packaging==21.3
     # via
     #   build
     #   pytest
-parso==0.8.2
+parso==0.8.3
     # via jedi
 pep517==0.13.0
     # via build
@@ -108,21 +110,25 @@ pexpect==4.8.0
     #   ipython
 pickleshare==0.7.5
     # via ipython
-pillow==8.2.0
+pillow==9.2.0
     # via kivy
 pip-tools==6.8.0
     # via -r requirements.in
-pipdeptree==1.0.0
+pipdeptree==2.3.1
     # via -r requirements.in
-pluggy==0.13.1
+platformdirs==2.5.2
+    # via virtualenv
+pluggy==1.0.0
     # via pytest
 plyer==2.0.0
     # via -r requirements.in
-prompt-toolkit==3.0.18
+prompt-toolkit==3.0.31
     # via ipython
 ptyprocess==0.7.0
     # via pexpect
-py==1.10.0
+pure-eval==0.2.2
+    # via stack-data
+py==1.11.0
     # via pytest
 pyasn1==0.4.8
     # via
@@ -130,64 +136,67 @@ pyasn1==0.4.8
     #   service-identity
 pyasn1-modules==0.2.8
     # via service-identity
-pycparser==2.20
+pycparser==2.21
     # via cffi
-pyflakes==2.2.0
+pyflakes==2.5.0
     # via -r requirements.in
-pygments==2.9.0
+pygments==2.13.0
     # via
     #   ipython
     #   kivy
-pynacl==1.4.0
+pynacl==1.5.0
     # via magic-wormhole
-pyopenssl==20.0.1
+pyopenssl==22.0.0
     # via twisted
-pyparsing==2.4.7
+pyparsing==3.0.9
     # via packaging
-pytest==6.1.2
+pytest==7.1.3
     # via
     #   -r requirements.in
     #   pytest-twisted
-pytest-twisted==1.13.2
+pytest-twisted==1.13.4
     # via -r requirements.in
-requests==2.25.1
+requests==2.28.1
     # via kivy-garden
 service-identity==21.1.0
     # via twisted
-sh==1.14.2
+sh==1.14.3
     # via buildozer
 six==1.16.0
     # via
+    #   asttokens
     #   automat
     #   magic-wormhole
-    #   pynacl
-    #   pyopenssl
     #   service-identity
-    #   virtualenv
 spake2==0.8
     # via magic-wormhole
-toml==0.10.2
-    # via pytest
+stack-data==0.5.0
+    # via ipython
 tomli==2.0.1
     # via
     #   build
     #   pep517
-tqdm==4.61.0
+    #   pytest
+tqdm==4.64.1
     # via magic-wormhole
-traitlets==5.0.5
-    # via ipython
-twisted[tls]==21.2.0
+traitlets==5.4.0
+    # via
+    #   ipython
+    #   matplotlib-inline
+twisted[tls]==22.8.0
     # via
     #   autobahn
     #   magic-wormhole
     #   txtorcon
-txaio==21.2.1
+txaio==22.2.1
     # via autobahn
-txtorcon==20.0.0
+txtorcon==22.0.0
     # via magic-wormhole
-urllib3==1.26.5
+typing-extensions==4.3.0
+    # via twisted
+urllib3==1.26.12
     # via requests
-virtualenv==20.4.7
+virtualenv==20.16.5
     # via buildozer
 wcwidth==0.2.5
     # via prompt-toolkit

@@ -8,11 +8,11 @@ git+https://github.com/pavelsof/buildozer@c4b4fdf0c803418a23efee9852702e67414617
 cython==0.29.21
 
 # unit tests
-pytest==6.1.2
-pytest-twisted==1.13.2
+pytest==7.1.3
+pytest-twisted==1.13.4
 
 # other tools
-ipython==7.19.0
+ipython==8.5.0
 pip-tools==6.8.0
-pipdeptree==1.0.0
-pyflakes==2.2.0
+pipdeptree==2.3.1
+pyflakes==2.5.0
