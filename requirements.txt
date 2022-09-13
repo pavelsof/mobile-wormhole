@@ -47,7 +47,7 @@ cryptography==38.0.1
     #   pyopenssl
     #   service-identity
     #   txtorcon
-cython==0.29.21
+cython==0.29.32
     # via -r requirements.in
 decorator==5.1.1
     # via
@@ -88,7 +88,7 @@ ipython==8.5.0
     # via -r requirements.in
 jedi==0.18.1
     # via ipython
-kivy[base]==2.0.0rc4
+kivy[base]==2.1.0
     # via -r requirements.in
 kivy-garden==0.1.5
     # via kivy
