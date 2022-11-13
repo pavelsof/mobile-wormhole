@@ -1,0 +1,11 @@
+Metadata-Version: 2.1
+Briefcase-Version: 0.3.11
+Name: mobile_wormhole
+Formal-Name: Wormhole
+App-ID: com.pavelsof.mobile_wormhole
+Version: 0.3.0
+Home-page: https://github.com/pavelsof/mobile-wormhole
+Download-URL: https://github.com/pavelsof/mobile-wormhole
+Author: pavelsof
+Author-email: mail@pavelsof.com
+Summary: Send and receive files using the Magic Wormhole protocol
